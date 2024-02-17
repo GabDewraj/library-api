@@ -20,11 +20,6 @@ func (*booksRepo) ArchiveBook(ctx context.Context, id int) error {
 	panic("unimplemented")
 }
 
-// DeleteBook implements books.Repository.
-func (*booksRepo) DeleteBook(ctx context.Context, id int) error {
-	panic("unimplemented")
-}
-
 // InsertBooks implements books.Repository.
 func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
 	// Start transaction
@@ -40,8 +35,17 @@ func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) 
 }
 
 // UpdateBook implements books.Repository.
-func (*booksRepo) UpdateBook(ctx context.Context, arg *books.Book) error {
-	panic("unimplemented")
+func (repo *booksRepo) UpdateBook(ctx context.Context, arg *books.Book) error {
+	// Start transaction
+	tx, err := repo.dbClient.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer concludeTx(tx, &err)
+	if err := repo.updatebook(ctx, tx, arg); err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewlibraryDB(db *sqlx.DB) books.Repository {
@@ -54,6 +58,52 @@ func NewlibraryDB(db *sqlx.DB) books.Repository {
 func (b *booksRepo) GetBooks(ctx context.Context, params books.GetBooksParams) ([]*books.Book, int, error) {
 	// Enter nil for sqlx.ExtContext as this query does not form part of a transaction chain
 	return b.getBooks(ctx, nil, &params)
+}
+
+func (p *booksRepo) updatebook(ctx context.Context, ext sqlx.ExtContext, updatedBook *books.Book) error {
+	updateBuilder := squirrel.Update("books")
+
+	if updatedBook.ISBN != "" {
+		updateBuilder = updateBuilder.Set("isbn", updatedBook.ISBN)
+	}
+	if updatedBook.Title != "" {
+		updateBuilder = updateBuilder.Set("title", updatedBook.Title)
+	}
+	if updatedBook.Author != "" {
+		updateBuilder = updateBuilder.Set("author", updatedBook.Author)
+	}
+	if updatedBook.Publisher != "" {
+		updateBuilder = updateBuilder.Set("publisher", updatedBook.Publisher)
+	}
+	if (updatedBook.Published != utils.CustomDate{}) {
+		updateBuilder = updateBuilder.Set("published", updatedBook.Published.Time)
+	}
+	if updatedBook.Genre != "" {
+		updateBuilder = updateBuilder.Set("genre", updatedBook.Genre)
+	}
+	if updatedBook.Language != "" {
+		updateBuilder = updateBuilder.Set("language", updatedBook.Language)
+	}
+	if updatedBook.Pages != 0 {
+		updateBuilder = updateBuilder.Set("pages", updatedBook.Pages)
+	}
+	if updatedBook.Availability != "" {
+		updateBuilder = updateBuilder.Set("available", updatedBook.Availability)
+	}
+	updateBuilder = updateBuilder.Set("updated_at", utils.CustomTime{Time: time.Now()}.Time)
+	updateBuilder = updateBuilder.Where(squirrel.Eq{"id": updatedBook.ID})
+	// Build the final SQL query and arguments
+	sql, args, err := updateBuilder.ToSql()
+	if err != nil {
+		return err
+	}
+	logrus.Infoln(sql, args)
+	// Execute the query with ExecContext
+	_, err = ext.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books []*books.Book) error {
@@ -73,7 +123,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 		}
 		ib = ib.Values(
 			book.ISBN, book.Title, book.Author, book.Publisher, book.Published.Time, book.Genre,
-			book.Language, book.Pages, book.Available, book.UpdatedAt.Time, book.CreatedAt.Time,
+			book.Language, book.Pages, book.Availability, book.UpdatedAt.Time, book.CreatedAt.Time,
 		)
 	}
 	// Build the final SQL query and arguments
@@ -82,9 +132,19 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 		return err
 	}
 	// Execute the query with ExecContext
-	_, err = ext.ExecContext(ctx, sql, args...)
+	result, err := ext.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return err
+	}
+	// Retrieve last insert ID
+	lastInsertID, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	// Write DB primary key ID back to the pointer
+	for _, book := range books {
+		book.ID = int(lastInsertID)
+		lastInsertID++
 	}
 
 	return nil
@@ -100,9 +160,13 @@ func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 	sb := squirrel.Select("id", "isbn", "title", "author", "publisher", "published",
 		"genre", "language", "pages", "available", "updated_at", "created_at").From("books")
 	sb = sb.Where("deleted_at IS NULL")
+	// Select by id
+	if params.ID != 0 {
+		sb = sb.Where(squirrel.Eq{"id": params.ID})
+	}
 	// Availability is a binary value that always holds a statement significant to the business context
-	if params.Available != "" {
-		sb = sb.Where(squirrel.Eq{"available": params.Available})
+	if params.Availability != "" {
+		sb = sb.Where(squirrel.Eq{"available": params.Availability})
 	}
 	if params.ISBN != "" {
 		sb = sb.Where(squirrel.Eq{"isbn": params.ISBN})
