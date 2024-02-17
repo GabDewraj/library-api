@@ -41,11 +41,6 @@ func NewBooksHandler(p *BooksHandlerParams) BooksHandler {
 	}
 }
 
-// ArchiveBook implements BooksHandler.
-func (*booksHandler) ArchiveBook(res http.ResponseWriter, req *http.Request) {
-	panic("unimplemented")
-}
-
 // CreateBook implements BooksHandler.
 func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 	var newBook books.Book
@@ -170,6 +165,75 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 }
 
 // UpdateBook implements BooksHandler.
-func (*booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
-	panic("unimplemented")
+func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
+	idParam := chi.URLParamFromCtx(req.Context(), "book_id")
+	// Scope the input to a urlParam
+	bookID, err := strconv.Atoi(idParam)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	requestBody := struct {
+		ISBN         string             `json:"isbn" db:"isbn"`
+		Title        string             `json:"title" db:"title"`
+		Author       string             `json:"author" db:"author"`
+		Publisher    string             `json:"publisher" db:"publisher"`
+		Published    utils.CustomDate   `json:"published" db:"published"`
+		Genre        string             `json:"genre" db:"genre"`
+		Language     string             `json:"language" db:"language"`
+		Pages        int                `json:"pages" db:"pages"`
+		Availability books.Availability `json:"available" db:"available"`
+	}{}
+	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	updatedBook := books.Book{
+		ID:           bookID,
+		ISBN:         requestBody.ISBN,
+		Title:        requestBody.Title,
+		Author:       requestBody.Author,
+		Publisher:    requestBody.Publisher,
+		Published:    requestBody.Published,
+		Genre:        requestBody.Genre,
+		Language:     requestBody.Language,
+		Pages:        requestBody.Pages,
+		Availability: requestBody.Availability,
+	}
+	if err = h.bookService.UpdateBook(req.Context(), &updatedBook); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	payload, err := json.Marshal(updatedBook)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err := res.Write(payload); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+// ArchiveBook implements BooksHandler.
+func (h *booksHandler) ArchiveBook(res http.ResponseWriter, req *http.Request) {
+	idParam := chi.URLParamFromCtx(req.Context(), "book_id")
+	// Scope the input to a urlParam
+	bookID, err := strconv.Atoi(idParam)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	updatedBook := books.Book{
+		ID:        bookID,
+		DeletedAt: utils.CustomTime{Time: time.Now()},
+	}
+	// Function is extensible to soft delete by updating the book deleted_at field
+	if err = h.bookService.UpdateBook(req.Context(), &updatedBook); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	res.WriteHeader(200)
 }
