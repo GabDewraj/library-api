@@ -40,32 +40,30 @@ func TestCreateNewBook(t *testing.T) {
 			ExpectedErr: nil,
 			Input: []*books.Book{
 				{
-					ID:        1,
 					ISBN:      "978-1234567890",
 					Title:     "The Great Gatsby",
 					Author:    "F. Scott Fitzgerald",
 					Publisher: "Scribner",
-					Published: utils.CustomDate{Time: time.Date(1925, 4, 10, 0, 0, 0, 0, time.UTC)},
+					Published: utils.CustomDate{Time: time.Date(1990, 4, 10, 0, 0, 0, 0, time.UTC)},
 					Genre:     "Fiction",
 					Language:  "English",
 					Pages:     180,
-					Available: true,
+					Available: books.Available,
 					UpdatedAt: utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
 					CreatedAt: utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
 					DeletedAt: utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
 				},
 				// Add more books as needed...
 				{
-					ID:        2,
 					ISBN:      "978-0451524935",
 					Title:     "1984",
 					Author:    "George Orwell",
 					Publisher: "Signet Classic",
-					Published: utils.CustomDate{Time: time.Date(1949, 6, 8, 0, 0, 0, 0, time.UTC)},
+					Published: utils.CustomDate{Time: time.Date(1980, 6, 8, 0, 0, 0, 0, time.UTC)},
 					Genre:     "Dystopian",
 					Language:  "English",
 					Pages:     328,
-					Available: true,
+					Available: books.Available,
 					UpdatedAt: utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
 					CreatedAt: utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
 					DeletedAt: utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
@@ -76,7 +74,179 @@ func TestCreateNewBook(t *testing.T) {
 	}
 	for _, test := range testCases {
 		err := booksRepo.InsertBooks(context.Background(), test.Input)
-		assertWithTest.Nil(err)
+		assertWithTest.Equal(test.ExpectedErr, err, test.Description)
+
+	}
+
+}
+
+func TestGetBooks(t *testing.T) {
+	assertWithTest := assert.New(t)
+	booksRepo, err := testingBooksDB()
+	assertWithTest.Nil(err, "Test org db conn successful")
+	ctx := context.Background()
+	seed := []*books.Book{
+		{
+			ISBN:      "978-1234567890",
+			Title:     "The Great Gatsby",
+			Author:    "F. Scott Fitzgerald",
+			Publisher: "Scribner",
+			Published: utils.CustomDate{Time: time.Date(1990, 4, 10, 0, 0, 0, 0, time.UTC)},
+			Genre:     "Fiction",
+			Language:  "English",
+			Pages:     180,
+			Available: books.Available,
+			UpdatedAt: utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
+			CreatedAt: utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
+			DeletedAt: utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
+		},
+		{
+			ISBN:      "978-0451524935",
+			Title:     "1984",
+			Author:    "George Orwell",
+			Publisher: "Signet Classic",
+			Published: utils.CustomDate{Time: time.Date(1980, 6, 8, 0, 0, 0, 0, time.UTC)},
+			Genre:     "Dystopian",
+			Language:  "English",
+			Pages:     328,
+			Available: books.Available,
+			UpdatedAt: utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
+			CreatedAt: utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
+			DeletedAt: utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
+		},
+		{
+			ID:        3,
+			ISBN:      "978-0061120084",
+			Title:     "To Kill a Mockingbird",
+			Author:    "Harper Lee",
+			Publisher: "Harper Perennial Modern Classics",
+			Published: utils.CustomDate{Time: time.Date(1980, 7, 11, 0, 0, 0, 0, time.UTC)},
+			Genre:     "Classics",
+			Language:  "English",
+			Pages:     336,
+			Available: books.NotAvailable,
+			UpdatedAt: utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
+			CreatedAt: utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
+			DeletedAt: utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
+		},
+		{
+			ID:        4,
+			ISBN:      "978-0142407332",
+			Title:     "The Outsiders",
+			Author:    "S.E. Hinton",
+			Publisher: "Penguin Books",
+			Published: utils.CustomDate{Time: time.Date(1980, 4, 24, 0, 0, 0, 0, time.UTC)},
+			Genre:     "Young Adult",
+			Language:  "English",
+			Pages:     192,
+			Available: books.NotAvailable,
+			UpdatedAt: utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
+			CreatedAt: utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
+			DeletedAt: utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
+		},
+		{
+			ID:        5,
+			ISBN:      "978-1400032493",
+			Title:     "The Kite Runner",
+			Author:    "Khaled Hosseini",
+			Publisher: "Riverhead Books",
+			Published: utils.CustomDate{Time: time.Date(2003, 5, 29, 0, 0, 0, 0, time.UTC)},
+			Genre:     "Fiction",
+			Language:  "English",
+			Pages:     371,
+			Available: books.NotAvailable,
+			UpdatedAt: utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
+			CreatedAt: utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
+			DeletedAt: utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
+		},
+	}
+	err = booksRepo.InsertBooks(ctx, seed)
+	assertWithTest.Nil(err)
+	testCases := []struct {
+		ExpectedOutput struct {
+			Count int
+			Error error
+		}
+		Input       books.GetBooksParams
+		Description string
+	}{
+		{
+			ExpectedOutput: struct {
+				Count int
+				Error error
+			}{
+				Count: 5,
+				Error: nil,
+			},
+			Input:       books.GetBooksParams{},
+			Description: "Get all books successfully",
+		},
+		{
+			ExpectedOutput: struct {
+				Count int
+				Error error
+			}{
+				Count: 2,
+				Error: nil,
+			},
+			Input: books.GetBooksParams{
+				Available: books.Available,
+			},
+			Description: "Get all available books",
+		},
+		{
+			ExpectedOutput: struct {
+				Count int
+				Error error
+			}{
+				Count: 3,
+				Error: nil,
+			},
+			Input: books.GetBooksParams{
+				Available: books.NotAvailable,
+			},
+			Description: "Get all unavailable books",
+		},
+		{
+			ExpectedOutput: struct {
+				Count int
+				Error error
+			}{
+				Count: 2,
+				Error: nil,
+			},
+			Input: books.GetBooksParams{
+				Available: books.NotAvailable,
+				Title:     "The",
+			},
+			Description: "Get all unavailable books that have `THE` in the title",
+		},
+		{
+			ExpectedOutput: struct {
+				Count int
+				Error error
+			}{
+				Count: 1,
+				Error: nil,
+			},
+			Input: books.GetBooksParams{
+				ISBN:      seed[0].ISBN,
+				Title:     seed[0].Title,
+				Author:    seed[0].Author,
+				Publisher: seed[0].Publisher,
+				Published: seed[0].Published,
+				Genre:     seed[0].Genre,
+				Language:  seed[0].Language,
+				Available: seed[0].Available,
+			},
+			Description: "make a specific search to find the first inserted book",
+		},
+	}
+	for _, test := range testCases {
+		retrievedBooks, count, retrieveErr := booksRepo.GetBooks(ctx, test.Input)
+		assertWithTest.NotNil(retrievedBooks, test.Description)
+		assertWithTest.Equal(test.ExpectedOutput.Count, count, test.Description)
+		assertWithTest.Nil(retrieveErr, test.Description)
 	}
 
 }

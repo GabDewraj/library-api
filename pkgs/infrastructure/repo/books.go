@@ -25,11 +25,6 @@ func (*booksRepo) DeleteBook(ctx context.Context, id int) error {
 	panic("unimplemented")
 }
 
-// GetBooks implements books.Repository.
-func (*booksRepo) GetBooks(ctx context.Context, params books.GetBooksParams) ([]*books.Book, error) {
-	panic("unimplemented")
-}
-
 // InsertBooks implements books.Repository.
 func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
 	// Start transaction
@@ -55,6 +50,12 @@ func NewlibraryDB(db *sqlx.DB) books.Repository {
 	}
 }
 
+// GetBooks implements books.Repository.
+func (b *booksRepo) GetBooks(ctx context.Context, params books.GetBooksParams) ([]*books.Book, int, error) {
+	// Enter nil for sqlx.ExtContext as this query does not form part of a transaction chain
+	return b.getBooks(ctx, nil, &params)
+}
+
 func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books []*books.Book) error {
 	// Make an efficient insert using a sql statement builder
 	ib := squirrel.Insert("books").Columns(
@@ -71,7 +72,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 			Time: time.Now(),
 		}
 		ib = ib.Values(
-			book.ISBN, book.Title, book.Author, book.Publisher, book.Published, book.Genre,
+			book.ISBN, book.Title, book.Author, book.Publisher, book.Published.Time, book.Genre,
 			book.Language, book.Pages, book.Available, book.UpdatedAt.Time, book.CreatedAt.Time,
 		)
 	}
@@ -93,34 +94,36 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 // Allow flexibility to include in a transaction or not
 // Return map to allow for linear allocation of child objects to parents
 // Return slice of project ids to allow for project scop child selection
-func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext, ssoID int,
+func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 	params *books.GetBooksParams) ([]*books.Book, int, error) {
 	var userBooks []*books.Book
 	sb := squirrel.Select("id", "isbn", "title", "author", "publisher", "published",
-		"genre", "language", "pages", "available", "updated_at", "created_at")
+		"genre", "language", "pages", "available", "updated_at", "created_at").From("books")
 	sb = sb.Where("deleted_at IS NULL")
 	// Availability is a binary value that always holds a statement significant to the business context
-	sb = sb.Where(squirrel.Eq{"isbn": params.Available})
+	if params.Available != "" {
+		sb = sb.Where(squirrel.Eq{"available": params.Available})
+	}
 	if params.ISBN != "" {
 		sb = sb.Where(squirrel.Eq{"isbn": params.ISBN})
 	}
 	if params.Title != "" {
-		sb = sb.Where(squirrel.Like{"title": params.Title})
+		sb = sb.Where(squirrel.Like{"title": "%" + params.Title + "%"})
 	}
 	if params.Author != "" {
-		sb = sb.Where(squirrel.Like{"author": params.Author})
+		sb = sb.Where(squirrel.Like{"author": "%" + params.Author + "%"})
 	}
 	if params.Publisher != "" {
-		sb = sb.Where(squirrel.Like{"publisher": params.Publisher})
+		sb = sb.Where(squirrel.Like{"publisher": "%" + params.Publisher + "%"})
 	}
 	if params.Genre != "" {
-		sb = sb.Where(squirrel.Like{"genre": params.Genre})
+		sb = sb.Where(squirrel.Like{"genre": "%" + params.Genre + "%"})
 	}
 	if params.Language != "" {
 		sb = sb.Where(squirrel.Eq{"language": params.Language})
 	}
 	if (params.Published != utils.CustomDate{}) {
-		sb = sb.Where(squirrel.Eq{"published": params.Published})
+		sb = sb.Where(squirrel.Eq{"published": params.Published.Time})
 	}
 	if (params.UpdatedAt != utils.CustomTime{}) {
 		sb = sb.Where("updated_at >= ?", params.UpdatedAt.Time)
@@ -134,37 +137,40 @@ func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext, ssoID 
 	}
 	// We always limit number of results retrieved
 	// Default can be set in domain or handler
-	sb = sb.Limit(uint64(params.PerPage))
+	// If we choose a specific page of results
+	if params.PerPage > 0 {
+		sb = sb.Limit(uint64(params.PerPage))
+	}
 	query, args, err := sb.ToSql()
 	if err != nil {
 		return nil, -1, err
 	}
 	logrus.Infoln(query, args)
 
-	var projectRows *sqlx.Rows
+	var bookRows *sqlx.Rows
 	switch ext {
 	case nil:
 		queryRows, err := repo.dbClient.QueryxContext(ctx, query, args...)
 		if err != nil {
 			return nil, -1, err
 		}
-		projectRows = queryRows
+		bookRows = queryRows
 	default:
 		txRows, err := ext.QueryxContext(ctx, query, args...)
 		if err != nil {
 			return nil, -1, err
 		}
-		projectRows = txRows
+		bookRows = txRows
 	}
-	defer projectRows.Close()
-	rowsErr := projectRows.Err()
+	defer bookRows.Close()
+	rowsErr := bookRows.Err()
 	if rowsErr != nil {
 		logrus.Error(rowsErr)
 		return nil, -1, rowsErr
 	}
-	for projectRows.Next() {
+	for bookRows.Next() {
 		var book books.Book
-		if err := projectRows.StructScan(&book); err != nil {
+		if err := bookRows.StructScan(&book); err != nil {
 			return nil, -1, err
 		}
 		userBooks = append(userBooks, &book)
