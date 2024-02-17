@@ -2,17 +2,7 @@ version: "3"
 
 services:
   # Golang.
-  server:
-    build:
-      context: .
-      dockerfile: ./build/docker/server/Dockerfile
-    container_name: server
-    ports:
-      - 8080:8080
-    # env_file: local_env.sh
-    entrypoint: ["./server", "server"]
-    networks:
-      - private-network
+  
   db:
     image: mysql:latest
     environment:
@@ -20,15 +10,17 @@ services:
       MYSQL_DATABASE: library_dev
     ports:
      - "3306:3306"
+    volumes:
+      - ./build/db:/docker-entrypoint-initdb.d/
     networks:
       - private-network
-
   redis:
     image: redis:3.2.4-alpine
     ports:
       - "6389:6379"
     networks:
       - private-network
+
   swagger:
     build:
       context: .
@@ -37,6 +29,21 @@ services:
       - 3000:8080
     networks:
       - private-network
+      
+  server:
+    build:
+      context: .
+      dockerfile: ./build/docker/server/Dockerfile
+    container_name: books_server
+    ports:
+      - 8080:8080
+    env_file: build/docker/server/env.sh
+    entrypoint: ["./server", "server"]
+    networks:
+      - private-network
+    depends_on:
+      - db
+      - redis
 
 networks:
   private-network:

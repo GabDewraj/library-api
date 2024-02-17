@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -81,22 +80,31 @@ func NewDBConnection(config *Config) (*sqlx.DB, error) {
 		dbConfig.Port,
 		dbConfig.Database,
 		dbConfig.ForceTLS)
-
-	db, err := sqlx.Connect("mysql", dbAddress)
-	if err != nil {
-		return nil, err
-	}
-	connectionErr := errors.New("system failed to establish db connection")
-	retries := 0
-	for connectionErr != nil {
-		time.Sleep(2 * time.Second)
-		connectionErr = db.Ping()
-		retries++
-		logger.WithField("DB Connection Attempt No: ", retries)
-		if retries == 4 {
-			return nil, errors.New("Ping test failed")
+	// If running in docker compose allow for db to initialise
+	// time.Sleep(5 * time.Second)
+	// db, err := sqlx.Connect("mysql", dbAddress)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if err := db.Ping(); err != nil {
+	// 	return nil, err
+	// }
+	var db *sqlx.DB
+	for retries := 0; retries < 10; retries++ {
+		successConn, err := sqlx.Connect("mysql", dbAddress)
+		if err == nil {
+			// Connection successful, break out of the loop
+			db = successConn
+			break
 		}
+
+		// Print or log the error (optional)
+		fmt.Printf("Failed to connect to the database. Retrying... (Attempt %d)\n", retries+1)
+
+		// Wait for the specified interval before retrying
+		time.Sleep(2 * time.Second)
 	}
+
 	logger.Infoln("Successfully Connected to Database Host")
 	// If connection successful perform new db migrations on app startup
 	if err := performMigrations(db, logger, dbConfig.MigrationDirectoryPath); err != nil {
