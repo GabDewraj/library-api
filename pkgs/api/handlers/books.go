@@ -41,7 +41,16 @@ func NewBooksHandler(p BooksHandlerParams) BooksHandler {
 	}
 }
 
-// CreateBook implements BooksHandler.
+// @Summary Create a new book
+// @Description Create a new book entry
+// @Tags Books
+// @Accept json
+// @Produce json
+// @Param requestBody body swagger.CreateBookRequestBody true "New book details"
+// @Success 200 {object} books.Book "Successfully created book"
+// @Failure 400 {string} string "Bad Request: Invalid input data"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /books [post]
 func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 	var newBook books.Book
 	if err := json.NewDecoder(req.Body).Decode(&newBook); err != nil {
@@ -69,7 +78,15 @@ func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// GetBookByID implements BooksHandler.
+// @Summary Get a book by ID
+// @Description Get details of a book by its ID
+// @Tags Books
+// @Accept json
+// @Produce json
+// @Param book_id path int true "Book ID" Format(int64)
+// @Success 200 {object} books.Book "Successfully retrieved book"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /books/{book_id} [get]
 func (h *booksHandler) GetBookByID(res http.ResponseWriter, req *http.Request) {
 	idParam := chi.URLParamFromCtx(req.Context(), "book_id")
 	// Scope the input to a urlParam
@@ -94,7 +111,26 @@ func (h *booksHandler) GetBookByID(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// GetBooks implements BooksHandler.
+// @Summary Get a list of books
+// @Description Get a list of books based on specified query parameters
+// @Tags Books
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number for pagination"
+// @Param per_page query int false "Number of books per page"
+// @Param updated_at query int false "Filter books by updated timestamp (Unix timestamp)"
+// @Param book_pages query int false "Filter books by number of pages"
+// @Param published query int false "Filter books by published date (Unix timestamp)"
+// @Param isbn query string false "Filter books by ISBN"
+// @Param title query string false "Filter books by title"
+// @Param author query string false "Filter books by author"
+// @Param publisher query string false "Filter books by publisher"
+// @Param genre query string false "Filter books by genre"
+// @Param language query string false "Filter books by language"
+// @Param availability query string false "Filter books by availability"
+// @Success 200 {object} swagger.GetBooksReponse "Successfully retrieved books"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /books [get]
 func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 	query := req.URL.Query()
 
@@ -173,7 +209,16 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 
 }
 
-// UpdateBook implements BooksHandler.
+// @Summary Update a book by ID
+// @Description Update details of a book by its ID
+// @Tags Books
+// @Accept json
+// @Produce json
+// @Param book_id path int true "Book ID" Format(int64)
+// @Param requestBody body swagger.UpdateBookRequestBody true "New book details"
+// @Success 200 {object} books.Book "Successfully updated book"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /books/{book_id} [put]
 func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
 	idParam := chi.URLParamFromCtx(req.Context(), "book_id")
 	// Scope the input to a urlParam
@@ -225,7 +270,15 @@ func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
 
 }
 
-// ArchiveBook implements BooksHandler.
+// @Summary Archive a book by ID
+// @Description Archive a book by marking it as deleted
+// @Tags Books
+// @Accept json
+// @Produce json
+// @Param book_id path int true "Book ID" Format(int64)
+// @Success 200 {string} string "Successfully archived book"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /books/{book_id} [delete]
 func (h *booksHandler) ArchiveBook(res http.ResponseWriter, req *http.Request) {
 	idParam := chi.URLParamFromCtx(req.Context(), "book_id")
 	// Scope the input to a urlParam

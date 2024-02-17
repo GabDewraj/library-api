@@ -1,4 +1,304 @@
+definitions:
+  books.Availability:
+    enum:
+    - available
+    - not_available
+    type: string
+    x-enum-varnames:
+    - Available
+    - NotAvailable
+  books.Book:
+    properties:
+      author:
+        type: string
+      availability:
+        $ref: '#/definitions/books.Availability'
+      created_at:
+        $ref: '#/definitions/utils.CustomTime'
+      deleted_at:
+        $ref: '#/definitions/utils.CustomTime'
+      genre:
+        type: string
+      id:
+        type: integer
+      isbn:
+        type: string
+      language:
+        type: string
+      pages:
+        type: integer
+      published:
+        $ref: '#/definitions/utils.CustomDate'
+      publisher:
+        type: string
+      title:
+        type: string
+      updated_at:
+        $ref: '#/definitions/utils.CustomTime'
+    required:
+    - author
+    - availability
+    - genre
+    - isbn
+    - language
+    - pages
+    - published
+    - publisher
+    - title
+    type: object
+  swagger.CreateBookRequestBody:
+    properties:
+      author:
+        type: string
+      availability:
+        type: string
+      genre:
+        type: string
+      id:
+        type: integer
+      isbn:
+        type: string
+      language:
+        type: string
+      pages:
+        type: integer
+      published:
+        type: integer
+      publisher:
+        type: string
+      title:
+        type: string
+    type: object
+  swagger.GetBooksReponse:
+    properties:
+      books:
+        items:
+          $ref: '#/definitions/books.Book'
+        type: array
+      count:
+        type: integer
+    type: object
+  swagger.UpdateBookRequestBody:
+    properties:
+      author:
+        type: string
+      availability:
+        type: string
+      genre:
+        type: string
+      id:
+        type: integer
+      isbn:
+        type: string
+      language:
+        type: string
+      pages:
+        type: integer
+      published:
+        type: integer
+      publisher:
+        type: string
+      title:
+        type: string
+    type: object
+  utils.CustomDate:
+    properties:
+      time.Time:
+        type: string
+    type: object
+  utils.CustomTime:
+    properties:
+      time.Time:
+        type: string
+    type: object
+host: localhost:8080
 info:
-  contact: {}
-paths: {}
+  contact:
+    email: gdewraj@gmail.com
+    name: Gabriel Dewraj
+    url: https://www.linkedin.com/in/gabriel-dewraj-8061681a2/
+  description: This is a sample library server.
+  termsOfService: http://swagger.io/terms/
+  title: Library API
+  version: "1.0"
+paths:
+  /books:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of books based on specified query parameters
+      parameters:
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - description: Number of books per page
+        in: query
+        name: per_page
+        type: integer
+      - description: Filter books by updated timestamp (Unix timestamp)
+        in: query
+        name: updated_at
+        type: integer
+      - description: Filter books by number of pages
+        in: query
+        name: book_pages
+        type: integer
+      - description: Filter books by published date (Unix timestamp)
+        in: query
+        name: published
+        type: integer
+      - description: Filter books by ISBN
+        in: query
+        name: isbn
+        type: string
+      - description: Filter books by title
+        in: query
+        name: title
+        type: string
+      - description: Filter books by author
+        in: query
+        name: author
+        type: string
+      - description: Filter books by publisher
+        in: query
+        name: publisher
+        type: string
+      - description: Filter books by genre
+        in: query
+        name: genre
+        type: string
+      - description: Filter books by language
+        in: query
+        name: language
+        type: string
+      - description: Filter books by availability
+        in: query
+        name: availability
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved books
+          schema:
+            $ref: '#/definitions/swagger.GetBooksReponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get a list of books
+      tags:
+      - Books
+    post:
+      consumes:
+      - application/json
+      description: Create a new book entry
+      parameters:
+      - description: New book details
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          $ref: '#/definitions/swagger.CreateBookRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully created book
+          schema:
+            $ref: '#/definitions/books.Book'
+        "400":
+          description: 'Bad Request: Invalid input data'
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new book
+      tags:
+      - Books
+  /books/{book_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Archive a book by marking it as deleted
+      parameters:
+      - description: Book ID
+        format: int64
+        in: path
+        name: book_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully archived book
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Archive a book by ID
+      tags:
+      - Books
+    get:
+      consumes:
+      - application/json
+      description: Get details of a book by its ID
+      parameters:
+      - description: Book ID
+        format: int64
+        in: path
+        name: book_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved book
+          schema:
+            $ref: '#/definitions/books.Book'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get a book by ID
+      tags:
+      - Books
+    put:
+      consumes:
+      - application/json
+      description: Update details of a book by its ID
+      parameters:
+      - description: Book ID
+        format: int64
+        in: path
+        name: book_id
+        required: true
+        type: integer
+      - description: New book details
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          $ref: '#/definitions/swagger.UpdateBookRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated book
+          schema:
+            $ref: '#/definitions/books.Book'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Update a book by ID
+      tags:
+      - Books
 swagger: "2.0"

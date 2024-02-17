@@ -1,7 +1,454 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "This is a sample library server.",
+        "title": "Library API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Gabriel Dewraj",
+            "url": "https://www.linkedin.com/in/gabriel-dewraj-8061681a2/",
+            "email": "gdewraj@gmail.com"
+        },
+        "version": "1.0"
     },
-    "paths": {}
+    "host": "localhost:8080",
+    "paths": {
+        "/books": {
+            "get": {
+                "description": "Get a list of books based on specified query parameters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Get a list of books",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of books per page",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter books by updated timestamp (Unix timestamp)",
+                        "name": "updated_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter books by number of pages",
+                        "name": "book_pages",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter books by published date (Unix timestamp)",
+                        "name": "published",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter books by ISBN",
+                        "name": "isbn",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter books by title",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter books by author",
+                        "name": "author",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter books by publisher",
+                        "name": "publisher",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter books by genre",
+                        "name": "genre",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter books by language",
+                        "name": "language",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter books by availability",
+                        "name": "availability",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved books",
+                        "schema": {
+                            "$ref": "#/definitions/swagger.GetBooksReponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new book entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Create a new book",
+                "parameters": [
+                    {
+                        "description": "New book details",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/swagger.CreateBookRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully created book",
+                        "schema": {
+                            "$ref": "#/definitions/books.Book"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid input data",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{book_id}": {
+            "get": {
+                "description": "Get details of a book by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Get a book by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Book ID",
+                        "name": "book_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved book",
+                        "schema": {
+                            "$ref": "#/definitions/books.Book"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update details of a book by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Update a book by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Book ID",
+                        "name": "book_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New book details",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/swagger.UpdateBookRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully updated book",
+                        "schema": {
+                            "$ref": "#/definitions/books.Book"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Archive a book by marking it as deleted",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Archive a book by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Book ID",
+                        "name": "book_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully archived book",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "books.Availability": {
+            "type": "string",
+            "enum": [
+                "available",
+                "not_available"
+            ],
+            "x-enum-varnames": [
+                "Available",
+                "NotAvailable"
+            ]
+        },
+        "books.Book": {
+            "type": "object",
+            "required": [
+                "author",
+                "availability",
+                "genre",
+                "isbn",
+                "language",
+                "pages",
+                "published",
+                "publisher",
+                "title"
+            ],
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "availability": {
+                    "$ref": "#/definitions/books.Availability"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/utils.CustomTime"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/utils.CustomTime"
+                },
+                "genre": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isbn": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "pages": {
+                    "type": "integer"
+                },
+                "published": {
+                    "$ref": "#/definitions/utils.CustomDate"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/utils.CustomTime"
+                }
+            }
+        },
+        "swagger.CreateBookRequestBody": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "availability": {
+                    "type": "string"
+                },
+                "genre": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isbn": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "pages": {
+                    "type": "integer"
+                },
+                "published": {
+                    "type": "integer"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "swagger.GetBooksReponse": {
+            "type": "object",
+            "properties": {
+                "books": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/books.Book"
+                    }
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "swagger.UpdateBookRequestBody": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "availability": {
+                    "type": "string"
+                },
+                "genre": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isbn": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "pages": {
+                    "type": "integer"
+                },
+                "published": {
+                    "type": "integer"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.CustomDate": {
+            "type": "object",
+            "properties": {
+                "time.Time": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.CustomTime": {
+            "type": "object",
+            "properties": {
+                "time.Time": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }

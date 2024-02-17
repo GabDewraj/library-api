@@ -19,6 +19,17 @@ var (
 	rootCmd cobra.Command
 )
 
+// @title           Library API
+// @version         1.0
+// @description     This is a sample library server.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   Gabriel Dewraj
+// @contact.url    https://www.linkedin.com/in/gabriel-dewraj-8061681a2/
+// @contact.email  gdewraj@gmail.com
+
+// @host      localhost:8080
+
 func main() {
 	// Test migrations for gh actions
 	rootCmd.AddCommand(
