@@ -50,9 +50,9 @@ func NewlibraryDB(db *sqlx.DB) books.Repository {
 }
 
 // GetBooks implements books.Repository.
-func (b *booksRepo) GetBooks(ctx context.Context, params books.GetBooksParams) ([]*books.Book, int, error) {
+func (b *booksRepo) GetBooks(ctx context.Context, params *books.GetBooksParams) ([]*books.Book, int, error) {
 	// Enter nil for sqlx.ExtContext as this query does not form part of a transaction chain
-	return b.getBooks(ctx, nil, &params)
+	return b.getBooks(ctx, nil, params)
 }
 
 func (p *booksRepo) updatebook(ctx context.Context, ext sqlx.ExtContext, updatedBook *books.Book) error {
@@ -83,7 +83,7 @@ func (p *booksRepo) updatebook(ctx context.Context, ext sqlx.ExtContext, updated
 		updateBuilder = updateBuilder.Set("pages", updatedBook.Pages)
 	}
 	if updatedBook.Availability != "" {
-		updateBuilder = updateBuilder.Set("available", updatedBook.Availability)
+		updateBuilder = updateBuilder.Set("availability", updatedBook.Availability)
 	}
 	if (updatedBook.DeletedAt != utils.CustomTime{}) {
 		updateBuilder = updateBuilder.Set("deleted_at", updatedBook.DeletedAt.Time)
@@ -108,7 +108,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 	// Make an efficient insert using a sql statement builder
 	ib := squirrel.Insert("books").Columns(
 		"isbn", "title", "author", "publisher", "published",
-		"genre", "language", "pages", "available", "updated_at", "created_at",
+		"genre", "language", "pages", "availability", "updated_at", "created_at",
 	)
 
 	// Add values for each user
@@ -156,7 +156,7 @@ func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 	params *books.GetBooksParams) ([]*books.Book, int, error) {
 	var userBooks []*books.Book
 	sb := squirrel.Select("id", "isbn", "title", "author", "publisher", "published",
-		"genre", "language", "pages", "available", "updated_at", "created_at").From("books")
+		"genre", "language", "pages", "availability", "updated_at", "created_at").From("books")
 	sb = sb.Where("deleted_at IS NULL")
 	// Select by id
 	if params.ID != 0 {
@@ -164,7 +164,7 @@ func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 	}
 	// Availability is a binary value that always holds a statement significant to the business context
 	if params.Availability != "" {
-		sb = sb.Where(squirrel.Eq{"available": params.Availability})
+		sb = sb.Where(squirrel.Eq{"availability": params.Availability})
 	}
 	if params.ISBN != "" {
 		sb = sb.Where(squirrel.Eq{"isbn": params.ISBN})

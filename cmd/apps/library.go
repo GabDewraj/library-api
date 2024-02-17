@@ -5,6 +5,10 @@ import (
 	"os"
 
 	"github.com/GabDewraj/library-api/cmd/config"
+	"github.com/GabDewraj/library-api/pkgs/api/handlers"
+	"github.com/GabDewraj/library-api/pkgs/api/middleware"
+	"github.com/GabDewraj/library-api/pkgs/api/routers"
+	"github.com/GabDewraj/library-api/pkgs/domain/books"
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/cache"
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/repo"
 	"github.com/go-chi/chi"
@@ -14,7 +18,7 @@ import (
 	"go.uber.org/fx"
 )
 
-type LibraryParams struct {
+type BooksAppParams struct {
 	fx.In
 	Cfg      *config.Config
 	Router   *chi.Mux
@@ -25,7 +29,7 @@ type LibraryParams struct {
 	Shutdown chan os.Signal
 }
 
-func LibraryApp(p LibraryParams) {
+func BooksApp(p BooksAppParams) {
 	// Create the application
 	app := fx.New(
 		fx.Supply(
@@ -37,16 +41,18 @@ func LibraryApp(p LibraryParams) {
 		fx.Provide(
 			cache.NewRedisCache,
 			repo.NewlibraryDB,
+			books.NewService,
+			middleware.NewMiddlwareStack,
+			handlers.NewBooksHandler,
 		),
-		// fx.Invoke(router.NewLibrarysRouter),
-		// Initiliase all separate server applications
+		fx.Invoke(routers.NewBooksRouter),
 	)
 
 	// Each fx child has its own dependency cycle with its own context
 	// We simply need to shut down the whole server if an application cannot startup and log the error
-	logrus.Infoln("Librarys application is running...")
+	logrus.Infoln("Books application is running...")
 	if err := app.Start(p.CTX); err != nil {
-		logrus.Errorf("Librarys application is shutting down with ERR: %v", err)
+		logrus.Errorf("Books application is shutting down with ERR: %v", err)
 		logrus.Error(err)
 		os.Exit(1)
 		return

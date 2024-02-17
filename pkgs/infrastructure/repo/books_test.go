@@ -140,7 +140,7 @@ func TestUpdateBook(t *testing.T) {
 		},
 	}
 	for _, test := range testCases {
-		retrievedBooks, _, retrieveErr := booksRepo.GetBooks(ctx, books.GetBooksParams{
+		retrievedBooks, _, retrieveErr := booksRepo.GetBooks(ctx, &books.GetBooksParams{
 			Title: "The Great Gatsby",
 		})
 		assertWithTest.NotNil(retrievedBooks, test.Description)
@@ -333,7 +333,7 @@ func TestGetBooks(t *testing.T) {
 		},
 	}
 	for _, test := range testCases {
-		retrievedBooks, count, retrieveErr := booksRepo.GetBooks(ctx, test.Input)
+		retrievedBooks, count, retrieveErr := booksRepo.GetBooks(ctx, &test.Input)
 		assertWithTest.NotNil(retrievedBooks, test.Description)
 		assertWithTest.Equal(test.ExpectedOutput.Count, count, test.Description)
 		assertWithTest.Nil(retrieveErr, test.Description)

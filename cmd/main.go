@@ -20,7 +20,7 @@ var (
 )
 
 func main() {
-	// Test migrations
+	// Test migrations for gh actions
 	rootCmd.AddCommand(
 		&cobra.Command{
 			Use:   "test-migration",
@@ -52,10 +52,11 @@ func main() {
 				// Create a context to handle binary startup
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
-				// Handle OS signals to gracefully shutdown the application
+				// Handle OS signals to gracefully shutdown the server
 				shutdownSignal := make(chan os.Signal, 1)
 				signal.Notify(shutdownSignal, os.Interrupt, syscall.SIGTERM)
 				app := fx.New(
+					// Provide global server items to all applications
 					fx.Provide(
 						func() (context.Context, chan os.Signal) {
 							return ctx, shutdownSignal
@@ -67,7 +68,7 @@ func main() {
 						config.NewRedisClient,
 					),
 					// Initialize all separate server applications
-					fx.Invoke(apps.LibraryApp),
+					fx.Invoke(apps.BooksApp),
 					// Run the router
 					fx.Invoke(
 						func(r *chi.Mux, cfg *config.Config, logger *logrus.Logger) {
@@ -77,25 +78,25 @@ func main() {
 					),
 				)
 
-				// Pass child context to allow for
+				// Pass child context to allow for shutdown
 				go func(ctx context.Context) {
 					// Wait for the shutdown signal
 					<-shutdownSignal
 					logger := logrus.StandardLogger()
 					logger.Info("Received shutdown signal. Shutting down gracefully...")
 
-					// Stop the application
+					// Stop the server
 					if err := app.Stop(ctx); err != nil {
-						logger.Error("Error stopping the application:", err)
+						logger.Error("Error stopping the server:", err)
 						os.Exit(1)
 					}
 					os.Exit(0)
 				}(ctx)
 
-				// Start the application
+				// Start the server
 				if err := app.Start(ctx); err != nil {
 					cancel()
-					logrus.StandardLogger().Fatal("Error starting the application:", err)
+					logrus.StandardLogger().Fatal("Error starting the server:", err)
 				}
 			},
 		})

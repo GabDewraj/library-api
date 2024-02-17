@@ -34,7 +34,7 @@ type BooksHandler interface {
 	ArchiveBook(res http.ResponseWriter, req *http.Request)
 }
 
-func NewBooksHandler(p *BooksHandlerParams) BooksHandler {
+func NewBooksHandler(p BooksHandlerParams) BooksHandler {
 	return &booksHandler{
 		bookService:  p.BookService,
 		cacheService: p.CacheService,
@@ -55,6 +55,10 @@ func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 	}
 	// Serve domain data to context domain service function
 	if err := h.bookService.CreateBooks(req.Context(), []*books.Book{&newBook}); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err := res.Write(newBook); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
