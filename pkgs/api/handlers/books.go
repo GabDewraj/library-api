@@ -58,7 +58,12 @@ func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if _, err := res.Write(newBook); err != nil {
+	payload, err := json.Marshal(newBook)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err := res.Write(payload); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -178,15 +183,15 @@ func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	requestBody := struct {
-		ISBN         string             `json:"isbn" db:"isbn"`
-		Title        string             `json:"title" db:"title"`
-		Author       string             `json:"author" db:"author"`
-		Publisher    string             `json:"publisher" db:"publisher"`
-		Published    utils.CustomDate   `json:"published" db:"published"`
-		Genre        string             `json:"genre" db:"genre"`
-		Language     string             `json:"language" db:"language"`
-		Pages        int                `json:"pages" db:"pages"`
-		Availability books.Availability `json:"available" db:"available"`
+		ISBN         string             `json:"isbn"`
+		Title        string             `json:"title"`
+		Author       string             `json:"author"`
+		Publisher    string             `json:"publisher"`
+		Published    utils.CustomDate   `json:"published"`
+		Genre        string             `json:"genre"`
+		Language     string             `json:"language"`
+		Pages        int                `json:"pages"`
+		Availability books.Availability `json:"availability"`
 	}{}
 	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)

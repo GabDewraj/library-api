@@ -36,5 +36,5 @@ func (s *service) GetBooks(ctx context.Context, params *GetBooksParams) ([]*Book
 // UpdateBook implements Service.
 func (s *service) UpdateBook(ctx context.Context, updatedBook *Book) error {
 	// All entity agnostic business logic to do with updating a book goes here
-	return s.UpdateBook(ctx, updatedBook)
+	return s.repo.UpdateBook(ctx, updatedBook)
 }
