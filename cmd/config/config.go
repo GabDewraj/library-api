@@ -81,16 +81,8 @@ func NewDBConnection(config *Config) (*sqlx.DB, error) {
 		dbConfig.Database,
 		dbConfig.ForceTLS)
 	// If running in docker compose allow for db to initialise
-	// time.Sleep(5 * time.Second)
-	// db, err := sqlx.Connect("mysql", dbAddress)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if err := db.Ping(); err != nil {
-	// 	return nil, err
-	// }
 	var db *sqlx.DB
-	for retries := 0; retries < 10; retries++ {
+	for retries := 0; retries < 30; retries++ {
 		successConn, err := sqlx.Connect("mysql", dbAddress)
 		if err == nil {
 			// Connection successful, break out of the loop
@@ -102,7 +94,7 @@ func NewDBConnection(config *Config) (*sqlx.DB, error) {
 		fmt.Printf("Failed to connect to the database. Retrying... (Attempt %d)\n", retries+1)
 
 		// Wait for the specified interval before retrying
-		time.Sleep(2 * time.Second)
+		time.Sleep(4 * time.Second)
 	}
 
 	logger.Infoln("Successfully Connected to Database Host")
