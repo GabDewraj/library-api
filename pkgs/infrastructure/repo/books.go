@@ -31,8 +31,17 @@ func (*booksRepo) GetBooks(ctx context.Context, params books.GetBooksParams) ([]
 }
 
 // InsertBooks implements books.Repository.
-func (*booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
-	panic("unimplemented")
+func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
+	// Start transaction
+	tx, err := repo.dbClient.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer concludeTx(tx, &err)
+	if err := repo.insertBooks(ctx, tx, newBooks); err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateBook implements books.Repository.
@@ -49,7 +58,7 @@ func NewlibraryDB(db *sqlx.DB) books.Repository {
 func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books []*books.Book) error {
 	// Make an efficient insert using a sql statement builder
 	ib := squirrel.Insert("books").Columns(
-		"id", "isbn", "title", "author", "publisher", "published",
+		"isbn", "title", "author", "publisher", "published",
 		"genre", "language", "pages", "available", "updated_at", "created_at",
 	)
 
@@ -62,7 +71,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 			Time: time.Now(),
 		}
 		ib = ib.Values(
-			book.ID, book.ISBN, book.Title, book.Author, book.Publisher, book.Published, book.Genre,
+			book.ISBN, book.Title, book.Author, book.Publisher, book.Published, book.Genre,
 			book.Language, book.Pages, book.Available, book.UpdatedAt.Time, book.CreatedAt.Time,
 		)
 	}
@@ -76,6 +85,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
