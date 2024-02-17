@@ -15,11 +15,6 @@ type booksRepo struct {
 	dbClient *sqlx.DB
 }
 
-// ArchiveBook implements books.Repository.
-func (*booksRepo) ArchiveBook(ctx context.Context, id int) error {
-	panic("unimplemented")
-}
-
 // InsertBooks implements books.Repository.
 func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
 	// Start transaction
@@ -89,6 +84,9 @@ func (p *booksRepo) updatebook(ctx context.Context, ext sqlx.ExtContext, updated
 	}
 	if updatedBook.Availability != "" {
 		updateBuilder = updateBuilder.Set("available", updatedBook.Availability)
+	}
+	if (updatedBook.DeletedAt != utils.CustomTime{}) {
+		updateBuilder = updateBuilder.Set("deleted_at", updatedBook.DeletedAt.Time)
 	}
 	updateBuilder = updateBuilder.Set("updated_at", utils.CustomTime{Time: time.Now()}.Time)
 	updateBuilder = updateBuilder.Where(squirrel.Eq{"id": updatedBook.ID})

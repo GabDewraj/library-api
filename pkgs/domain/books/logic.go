@@ -1,6 +1,12 @@
 package books
 
-import "github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
+import (
+	"errors"
+	"fmt"
+
+	"github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
+	"github.com/go-playground/validator"
+)
 
 type Availability string
 
@@ -11,15 +17,15 @@ const (
 
 type Book struct {
 	ID           int              `json:"id" db:"id"`
-	ISBN         string           `json:"isbn" db:"isbn"`
-	Title        string           `json:"title" db:"title"`
-	Author       string           `json:"author" db:"author"`
-	Publisher    string           `json:"publisher" db:"publisher"`
-	Published    utils.CustomDate `json:"published" db:"published"`
-	Genre        string           `json:"genre" db:"genre"`
-	Language     string           `json:"language" db:"language"`
-	Pages        int              `json:"pages" db:"pages"`
-	Availability Availability     `json:"available" db:"available"`
+	ISBN         string           `json:"isbn" db:"isbn" validate:"required"`
+	Title        string           `json:"title" db:"title" validate:"required"`
+	Author       string           `json:"author" db:"author" validate:"required"`
+	Publisher    string           `json:"publisher" db:"publisher" validate:"required"`
+	Published    utils.CustomDate `json:"published" db:"published" validate:"required"`
+	Genre        string           `json:"genre" db:"genre" validate:"required"`
+	Language     string           `json:"language" db:"language" validate:"required"`
+	Pages        int              `json:"pages" db:"pages" validate:"required"`
+	Availability Availability     `json:"available" db:"available" validate:"required"`
 	UpdatedAt    utils.CustomTime `json:"updated_at" db:"updated_at"`
 	CreatedAt    utils.CustomTime `json:"created_at" db:"created_at"`
 	DeletedAt    utils.CustomTime `json:"deleted_at" db:"deleted_at"`
@@ -39,4 +45,36 @@ type GetBooksParams struct {
 	Language     string
 	Pages        int
 	Availability Availability
+}
+
+// Object methods for aggregate root
+// Validation for creating a Book
+func (b *Book) ValidateCreateBook() error {
+	validate := validator.New()
+
+	err := validate.Struct(b)
+
+	if err != nil {
+		return validationErrMessage(err.(validator.ValidationErrors))
+	}
+	return nil
+}
+
+// Internal helper funcs for methods
+func validationErrMessage(errs validator.ValidationErrors) error {
+	for _, err := range errs {
+		var errMessage string
+		switch err.Tag() {
+		case "required":
+			errMessage = fmt.Sprintf("%s field is required", err.Field())
+		case "min":
+			errMessage = fmt.Sprintf("%s field is too short", err.Field())
+		case "max":
+			errMessage = fmt.Sprintf("%s field is too long", err.Field())
+		default:
+			errMessage = fmt.Sprintf("%s field has the following error %s", err.Field(), err.Tag())
+		}
+		return errors.New(errMessage)
+	}
+	return nil
 }

@@ -134,6 +134,7 @@ func TestUpdateBook(t *testing.T) {
 				Language:     "English Updated",
 				Pages:        220,
 				Availability: books.NotAvailable,
+				DeletedAt:    utils.CustomTime{Time: time.Now()},
 			},
 			Description: "Update all fields",
 		},
