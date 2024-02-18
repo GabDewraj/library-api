@@ -2,11 +2,6 @@
 
 Welcome to the Library API, a Golang-based API server for managing a library.
 
-<div class="image-container">
-    <h1>Golang Logo</h1>
-    <img src="https://www.freecodecamp.org/news/content/images/2021/03/golang-sq.png" alt="Golang Logo">
-</div>
-
 ## Overview
 
 The Library API is designed with a clean and modular architecture, following a 3-layered structure for better maintainability and scalability.
