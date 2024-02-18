@@ -1,11 +1,9 @@
 package middleware
 
 import (
-	"encoding/binary"
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/cache"
 	"github.com/sirupsen/logrus"
@@ -25,42 +23,28 @@ func (s *service) RateLimiter(next http.Handler) http.Handler {
 
 		switch exists {
 		case true:
-			payload, err := s.Cache.Retrieve(r.Context(), []string{clientKey})
+			count, err := s.Cache.RetrieveInteger(r.Context(), clientKey)
 			if err != nil {
 				logrus.Error(err)
-				http.Error(w, "Could not get user request number from cache", http.StatusInternalServerError)
+				http.Error(w, "Could not convert payload value to int64", http.StatusInternalServerError)
 				return
 			}
 
-			if len(payload) > 0 {
-				count, err := s.binaryVarint(payload[0].Value)
-				if err != nil {
-					logrus.Error(err)
-					http.Error(w, "Could not convert payload value to int64", http.StatusInternalServerError)
-					return
-				}
-
-				if count > 5 {
-					err := errors.New("Client has hit rate limit")
-					http.Error(w, err.Error(), http.StatusTooManyRequests)
-					return
-				}
-				// Increment request count
-				_, err = s.Cache.KeyIncrement(r.Context(), clientKey)
-				if err != nil {
-					logrus.Error(err)
-					http.Error(w, "Could not increment client key", http.StatusInternalServerError)
-					return
-				}
+			if count >= 5 {
+				err := errors.New("Client has hit rate limit")
+				http.Error(w, err.Error(), http.StatusTooManyRequests)
+				return
 			}
+			// Increment request count
+			_, err = s.Cache.KeyIncrement(r.Context(), clientKey)
+			if err != nil {
+				logrus.Error(err)
+				http.Error(w, "Could not increment client key", http.StatusInternalServerError)
+				return
+			}
+
 		default:
-			if err := s.Cache.Store(r.Context(), []*cache.CachePayload{
-				{
-					Key:        clientKey,
-					Value:      []byte{1},
-					Expiration: 3 * time.Minute,
-				},
-			}); err != nil {
+			if err := s.Cache.StoreInteger(r.Context(), cache.CacheIntegerPayload{Key: clientKey, Value: 1}); err != nil {
 				logrus.Error(err)
 				http.Error(w, "Could not store user request ip in cache", http.StatusInternalServerError)
 				return
@@ -79,12 +63,4 @@ func (s *service) getClientIp(r *http.Request) string {
 		ipAddress = ipAddress[:colonIndex]
 	}
 	return ipAddress
-}
-
-func (s *service) binaryVarint(data []byte) (int64, error) {
-	value, n := binary.Varint(data)
-	if n <= 0 {
-		return 0, errors.New("binaryVarint: decoding failure")
-	}
-	return value, nil
 }

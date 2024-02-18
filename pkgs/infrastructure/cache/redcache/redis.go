@@ -2,6 +2,7 @@ package redcache
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/cache"
 	"github.com/redis/go-redis/v9"
@@ -15,6 +16,26 @@ func NewRedisCache(client *redis.Client) cache.Service {
 	return &service{
 		rdb: client,
 	}
+}
+
+// RetrieveInteger implements cache.Service.
+func (s *service) RetrieveInteger(ctx context.Context, key string) (int, error) {
+	result, err := s.rdb.Get(ctx, key).Result()
+	if err != nil {
+		return 0, err
+	}
+	// Convert the string result to an integer
+	intValue, err := strconv.Atoi(result)
+	if err != nil {
+		return 0, err
+	}
+	return intValue, nil
+}
+
+// StoreInteger implements cache.Service.
+func (s *service) StoreInteger(ctx context.Context, asset cache.CacheIntegerPayload) error {
+	// Set the values in the cache
+	return s.rdb.Set(ctx, asset.Key, asset.Value, asset.Expiration).Err()
 }
 
 // ClearCacheByKeys implements Service.
@@ -33,7 +54,7 @@ func (s *service) ExistenceCheck(ctx context.Context, key string) (bool, error) 
 	return false, nil
 }
 
-func (s *service) Store(ctx context.Context, payload []*cache.CachePayload) error {
+func (s *service) StoreJSON(ctx context.Context, payload []*cache.CacheJsonPayload) error {
 	values := map[string]string{}
 	for _, asset := range payload {
 		values[asset.Key] = string(asset.Value)
@@ -53,17 +74,17 @@ func (s *service) Store(ctx context.Context, payload []*cache.CachePayload) erro
 	return nil
 }
 
-func (s *service) Retrieve(ctx context.Context, keys []string) ([]*cache.CachePayload, error) {
+func (s *service) RetrieveJSON(ctx context.Context, keys []string) ([]*cache.CacheJsonPayload, error) {
 
 	// Retrieve the serialized strings
 	jsonStrings, err := s.rdb.MGet(ctx, keys...).Result()
 	if err != nil {
 		return nil, err
 	}
-	var data []*cache.CachePayload
+	var data []*cache.CacheJsonPayload
 	for index, jsonString := range jsonStrings {
 		if jsonString != nil {
-			retrievedAsset := &cache.CachePayload{
+			retrievedAsset := &cache.CacheJsonPayload{
 				Key:   keys[index],
 				Value: []byte(jsonString.(string)),
 			}

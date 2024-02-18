@@ -62,11 +62,11 @@ func TestStoreValue(t *testing.T) {
 	// Create a payload
 	testService := NewRedisCache(testClient)
 	// Create a slice of cache payloads
-	data := []*cache.CachePayload{}
+	data := []*cache.CacheJsonPayload{}
 	for _, book := range newBooks {
 		jsonData, err := json.Marshal(book)
 		assertWithTest.Nil(err, "Data has been serialized")
-		asset := &cache.CachePayload{
+		asset := &cache.CacheJsonPayload{
 			Key:        book.Author,
 			Value:      jsonData,
 			Expiration: 1 * time.Minute,
@@ -74,7 +74,7 @@ func TestStoreValue(t *testing.T) {
 		data = append(data, asset)
 	}
 
-	err := testService.Store(context.Background(), data)
+	err := testService.StoreJSON(context.Background(), data)
 	assertWithTest.Nil(err, "Store the value with no error")
 
 	// Do an existence check
@@ -92,11 +92,11 @@ func TestRetrieveValue(t *testing.T) {
 	// Create a payload
 	testService := NewRedisCache(testClient)
 	// Create a slice of cache payloads
-	data := []*cache.CachePayload{}
+	data := []*cache.CacheJsonPayload{}
 	for _, book := range newBooks {
 		jsonData, err := json.Marshal(book)
 		assertWithTest.Nil(err, "Data has been serialized")
-		asset := &cache.CachePayload{
+		asset := &cache.CacheJsonPayload{
 			Key:        book.Author,
 			Value:      jsonData,
 			Expiration: 1 * time.Minute,
@@ -105,10 +105,10 @@ func TestRetrieveValue(t *testing.T) {
 	}
 
 	// Store data
-	err := testService.Store(context.Background(), data)
+	err := testService.StoreJSON(context.Background(), data)
 	assertWithTest.Nil(err, "Store the value with no error")
 	// Retrieve the stored data
-	retrievedData, err := testService.Retrieve(context.Background(),
+	retrievedData, err := testService.RetrieveJSON(context.Background(),
 		[]string{newBooks[0].Author})
 	assertWithTest.Nil(err, "Data should be retrieved successfully")
 	assertWithTest.Equal(data[0].Value, retrievedData[0].Value)
@@ -121,12 +121,12 @@ func TestClearCacheByKeys(t *testing.T) {
 	// Create a payload
 	testService := NewRedisCache(testClient)
 	// Create a slice of cache payloads
-	data := []*cache.CachePayload{}
+	data := []*cache.CacheJsonPayload{}
 	keys := []string{}
 	for _, book := range newBooks {
 		jsonData, err := json.Marshal(book)
 		assertWithTest.Nil(err, "Data has been serialized")
-		asset := &cache.CachePayload{
+		asset := &cache.CacheJsonPayload{
 			Key:        book.Author,
 			Value:      jsonData,
 			Expiration: 1 * time.Minute,
@@ -137,13 +137,13 @@ func TestClearCacheByKeys(t *testing.T) {
 	}
 
 	// Store data
-	err := testService.Store(ctx, data)
+	err := testService.StoreJSON(ctx, data)
 	assertWithTest.Nil(err, "Store the value with no error")
 	// Delete data
 	err = testService.ClearCacheByKeys(ctx, keys)
 	assertWithTest.Nil(err, "Delete values from cache successfully")
 	// Retrieve the stored data
-	values, err := testService.Retrieve(context.Background(),
+	values, err := testService.RetrieveJSON(context.Background(),
 		[]string{newBooks[0].Author})
 	assertWithTest.Nil(err, "Data should be retrieved successfully")
 	assertWithTest.Nil(values, "Nothing in cache to return")
