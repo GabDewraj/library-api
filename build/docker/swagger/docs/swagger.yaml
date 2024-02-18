@@ -54,8 +54,6 @@ definitions:
         type: string
       genre:
         type: string
-      id:
-        type: integer
       isbn:
         type: string
       language:
@@ -86,8 +84,6 @@ definitions:
         type: string
       genre:
         type: string
-      id:
-        type: integer
       isbn:
         type: string
       language:

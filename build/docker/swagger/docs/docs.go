@@ -366,9 +366,6 @@ const docTemplate = `{
                 "genre": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "isbn": {
                     "type": "string"
                 },
@@ -414,9 +411,6 @@ const docTemplate = `{
                 },
                 "genre": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 },
                 "isbn": {
                     "type": "string"

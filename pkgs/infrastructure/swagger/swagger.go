@@ -5,7 +5,6 @@ import "github.com/GabDewraj/library-api/pkgs/domain/books"
 // File defining all Request bodies
 
 type CreateBookRequestBody struct {
-	ID           int
 	ISBN         string
 	Title        string
 	Author       string
@@ -18,7 +17,6 @@ type CreateBookRequestBody struct {
 }
 
 type UpdateBookRequestBody struct {
-	ID           int
 	ISBN         string
 	Title        string
 	Author       string
