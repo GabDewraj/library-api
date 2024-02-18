@@ -10,4 +10,5 @@ export SERVER_PORT="8080"
 export REDIS_HOST="redis"
 export REDIS_PORT="6379"
 export RATE_LIMITER_MAX_REQUESTS=100
+# Time in minutes
 export RATE_LIMITER_WINDOW=1
