@@ -6,6 +6,7 @@ type Service interface {
 	CreateBooks(ctx context.Context, newBooks []*Book) error
 	UpdateBook(ctx context.Context, updatedBook *Book) error
 	GetBooks(ctx context.Context, params *GetBooksParams) ([]*Book, int, error)
+	DeleteBookByID(ctx context.Context, id int) error
 }
 
 type service struct {
@@ -37,4 +38,9 @@ func (s *service) GetBooks(ctx context.Context, params *GetBooksParams) ([]*Book
 func (s *service) UpdateBook(ctx context.Context, updatedBook *Book) error {
 	// All entity agnostic business logic to do with updating a book goes here
 	return s.repo.UpdateBook(ctx, updatedBook)
+}
+
+func (s *service) DeleteBookByID(ctx context.Context, id int) error {
+	// All entity agnostic business logic to do with updating a book goes here
+	return s.repo.DeleteBookByID(ctx, id)
 }

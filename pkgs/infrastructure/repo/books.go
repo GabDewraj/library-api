@@ -15,6 +15,12 @@ type booksRepo struct {
 }
 
 // InsertBooks implements books.Repository.
+
+func NewBooksDB(db *sqlx.DB) books.Repository {
+	return &booksRepo{
+		dbClient: db,
+	}
+}
 func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
 	// Start transaction
 	tx, err := repo.dbClient.BeginTxx(ctx, nil)
@@ -42,10 +48,17 @@ func (repo *booksRepo) UpdateBook(ctx context.Context, arg *books.Book) error {
 	return nil
 }
 
-func NewlibraryDB(db *sqlx.DB) books.Repository {
-	return &booksRepo{
-		dbClient: db,
+func (repo *booksRepo) DeleteBookByID(ctx context.Context, id int) error {
+	// Start transaction
+	tx, err := repo.dbClient.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
 	}
+	defer concludeTx(tx, &err)
+	if err := repo.deleteBookByID(ctx, tx, id); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetBooks implements books.Repository.
@@ -234,4 +247,12 @@ func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 		userBooks = append(userBooks, &book)
 	}
 	return userBooks, len(userBooks), nil
+}
+
+// hard delete
+func (repo *booksRepo) deleteBookByID(ctx context.Context, ext sqlx.ExtContext, id int) error {
+	if _, err := repo.dbClient.Exec("DELETE FROM books where id=?;", id); err != nil {
+		return err
+	}
+	return nil
 }

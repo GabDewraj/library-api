@@ -26,6 +26,6 @@ func NewBooksRouter(params LibraryRouterParams) error {
 	params.Mux.Get("/books", params.Handler.GetBooks)
 	params.Mux.Get("/books/{book_id}", params.Handler.GetBookByID)
 	params.Mux.Put("/books/{book_id}", params.Handler.UpdateBook)
-	params.Mux.Delete("/books/{book_id}", params.Handler.ArchiveBook)
+	params.Mux.Delete("/books/{book_id}", params.Handler.DeleteBook)
 	return nil
 }

@@ -223,7 +223,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Archive a book by marking it as deleted
+      description: delete a book by ID (Hard delete)
       parameters:
       - description: Book ID
         format: int64
@@ -235,16 +235,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Successfully archived book
+          description: Successfully deleted book
           schema:
             type: string
         "500":
           description: Internal Server Error
           schema:
             type: string
-      summary: Archive a book by ID
-      tags:
-      - Books
+      summary: delete a book by ID
     get:
       consumes:
       - application/json

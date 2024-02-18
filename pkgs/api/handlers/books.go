@@ -33,7 +33,7 @@ type BooksHandler interface {
 	UpdateBook(res http.ResponseWriter, req *http.Request)
 	GetBooks(res http.ResponseWriter, req *http.Request)
 	GetBookByID(res http.ResponseWriter, req *http.Request)
-	ArchiveBook(res http.ResponseWriter, req *http.Request)
+	DeleteBook(res http.ResponseWriter, req *http.Request)
 }
 
 func NewBooksHandler(p BooksHandlerParams) BooksHandler {
@@ -292,16 +292,15 @@ func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
 
 }
 
-// @Summary Archive a book by ID
-// @Description Archive a book by marking it as deleted
-// @Tags Books
+// @Summary delete a book by ID
+// @Description delete a book by ID (Hard delete)
 // @Accept json
 // @Produce json
 // @Param book_id path int true "Book ID" Format(int64)
-// @Success 200 {string} string "Successfully archived book"
+// @Success 200 {string} string "Successfully deleted book"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /books/{book_id} [delete]
-func (h *booksHandler) ArchiveBook(res http.ResponseWriter, req *http.Request) {
+func (h *booksHandler) DeleteBook(res http.ResponseWriter, req *http.Request) {
 	idParam := chi.URLParamFromCtx(req.Context(), "book_id")
 	// Scope the input to a urlParam
 	bookID, err := strconv.Atoi(idParam)
@@ -311,17 +310,13 @@ func (h *booksHandler) ArchiveBook(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	updatedBook := books.Book{
-		ID:        bookID,
-		DeletedAt: utils.CustomTime{Time: time.Now()},
-	}
 	// Function is extensible to soft delete by updating the book deleted_at field
-	if err = h.bookService.UpdateBook(req.Context(), &updatedBook); err != nil {
+	if err = h.bookService.DeleteBookByID(req.Context(), bookID); err != nil {
 		logrus.Error(err)
-		http.Error(res, "failed to archive book", http.StatusInternalServerError)
+		http.Error(res, "failed to delete book", http.StatusInternalServerError)
 		return
 	}
-	if _, err := res.Write([]byte("Successfully archived book")); err != nil {
+	if _, err := res.Write([]byte("Successfully deleted book")); err != nil {
 		http.Error(res, "Could not write response", http.StatusInternalServerError)
 		return
 	}

@@ -12,6 +12,8 @@ export SERVER_PORT="8080"
 export SYSTEM_PARTITION="library"
 export REDIS_HOST="localhost"
 export REDIS_PORT="6389"
-export RATE_LIMITER_MAX_REQUESTS=5
+export RATE_LIMITER_MAX_REQUESTS=30
 export RATE_LIMITER_WINDOW=1
 go run cmd/main.go server
+# Create a dump for running in compose 
+# mysqldump -u root -p --host 127.0.0.1 --port 3306 --ssl-mode=REQUIRED library_dev > dump_file.sql

@@ -30,6 +30,9 @@ func TestCreateNewBook(t *testing.T) {
 	assertWithTest := assert.New(t)
 	booksRepo, err := testingBooksDB()
 	assertWithTest.Nil(err, "Test org db conn successful")
+	if err != nil {
+		return
+	}
 
 	testCases := []struct {
 		ExpectedErr error
@@ -387,4 +390,36 @@ func TestGetBooks(t *testing.T) {
 		}
 	}
 
+}
+
+func TestDeleteBook(t *testing.T) {
+	assertWithTest := assert.New(t)
+	booksRepo, err := testingBooksDB()
+	assertWithTest.Nil(err, "Test org db conn successful")
+	if err != nil {
+		return
+	}
+	ctx := context.Background()
+	book := books.Book{
+		ISBN:         "978-1400032493",
+		Title:        "The Kite Runner",
+		Author:       "Khaled Hosseini",
+		Publisher:    "Riverhead Books",
+		Published:    utils.CustomDate{Time: time.Date(2003, 5, 29, 0, 0, 0, 0, time.UTC)},
+		Genre:        "Fiction",
+		Language:     "English",
+		Pages:        371,
+		Availability: books.NotAvailable,
+		UpdatedAt:    utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
+		CreatedAt:    utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
+		DeletedAt:    utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
+	}
+	err = booksRepo.InsertBooks(ctx, []*books.Book{&book})
+	assertWithTest.Nil(err)
+	if err != nil {
+		return
+	}
+	// Delete Book
+	err = booksRepo.DeleteBookByID(ctx, book.ID)
+	assertWithTest.Nil(err)
 }

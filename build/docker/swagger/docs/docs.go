@@ -252,17 +252,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Archive a book by marking it as deleted",
+                "description": "delete a book by ID (Hard delete)",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "Books"
-                ],
-                "summary": "Archive a book by ID",
+                "summary": "delete a book by ID",
                 "parameters": [
                     {
                         "type": "integer",
@@ -275,7 +272,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successfully archived book",
+                        "description": "Successfully deleted book",
                         "schema": {
                             "type": "string"
                         }

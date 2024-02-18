@@ -43,7 +43,7 @@ func BooksApp(p BooksAppParams) {
 		),
 		fx.Provide(
 			redcache.NewRedisCache,
-			repo.NewlibraryDB,
+			repo.NewBooksDB,
 			books.NewService,
 			middleware.NewMiddlwareStack,
 			handlers.NewBooksHandler,
