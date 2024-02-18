@@ -28,10 +28,13 @@ Navigate to http://localhost:3000 in your browser to explore the Swagger documen
 ## Accessing the API Server
 The API server can be accessed at http://localhost:8080.
 
+## Postman collection
+The postman collection for the api can be found at: ```build/postman/Library-api.postman_collection.json``` in this project.
+
 # Important Notes
 Allow a few moments for the server to establish a connection to the MySQL database when running Docker Compose.
-The database initialization may take a minute or two. This takes about 4 to 6 connection attempts after it starts up, 
-view the logs to see the attempts and verify that connection has been established.
+The database initialization may take a minute or two. The server takes about 4 to 6 connection attempts after it starts up, 
+view the logs to see the attempts and verify that connection has been established before testing.
 
 # Architecture
 The architecture promotes a modular and maintainable codebase.

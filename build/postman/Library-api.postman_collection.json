@@ -1,0 +1,126 @@
+{
+	"info": {
+		"_postman_id": "19401d7c-854f-44ef-9b97-f4f148c0d168",
+		"name": "Library-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "23910977"
+	},
+	"item": [
+		{
+			"name": "CreateBook",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"isbn\": \"123456780122\",\n  \"title\": \"Sample Book21\",\n  \"author\": \"John Doe\",\n  \"publisher\": \"Publisher XYZ\",\n  \"published\": 1641043200,\n  \"genre\": \"Fiction\",\n  \"language\": \"English\",\n  \"pages\": 300,\n  \"availability\":\"avaialable\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8080/books"
+			},
+			"response": []
+		},
+		{
+			"name": "GetBooks",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/books?title=Great&updated_at",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"books"
+					],
+					"query": [
+						{
+							"key": "title",
+							"value": "Great"
+						},
+						{
+							"key": "updated_at",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetBookByID",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8080/books/5"
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteBookByID",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8080/books/6"
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateBook",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"isbn\": \"123456780\",\n  \"title\": \"Sample Book\",\n  \"author\": \"John Doe\",\n  \"publisher\": \"Publisher XYZ\",\n  \"published\": 1641043200,\n  \"genre\": \"Fiction\",\n  \"language\": \"English\",\n  \"pages\": 300,\n  \"availability\":\"available\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8080/books/6"
+			},
+			"response": []
+		}
+	]
+}
