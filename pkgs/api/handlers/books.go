@@ -235,7 +235,7 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 // @Produce json
 // @Param book_id path int true "Book ID" Format(int64)
 // @Param requestBody body swagger.UpdateBookRequestBody true "New book details"
-// @Success 200 {object} books.Book "Successfully updated book"
+// @Success 200 {string} string "book by author has been updated successfully"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /books/{book_id} [put]
 func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
@@ -321,5 +321,8 @@ func (h *booksHandler) ArchiveBook(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "failed to archive book", http.StatusInternalServerError)
 		return
 	}
-	res.WriteHeader(200)
+	if _, err := res.Write([]byte("Successfully archived book")); err != nil {
+		http.Error(res, "Could not write response", http.StatusInternalServerError)
+		return
+	}
 }

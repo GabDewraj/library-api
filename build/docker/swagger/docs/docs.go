@@ -238,9 +238,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successfully updated book",
+                        "description": "book by author has been updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/books.Book"
+                            "type": "string"
                         }
                     },
                     "500": {
