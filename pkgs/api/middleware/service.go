@@ -24,6 +24,7 @@ type service struct {
 type Service interface {
 	CORS(next http.Handler) http.Handler
 	RateLimiter(next http.Handler) http.Handler
+	CustomLogger(next http.Handler) http.Handler
 }
 
 func NewMiddlwareStack(p Params) Service {

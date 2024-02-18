@@ -15,6 +15,8 @@ type LibraryRouterParams struct {
 }
 
 func NewBooksRouter(params LibraryRouterParams) error {
+	// Logging
+	params.Mux.Use(params.Middleware.CustomLogger)
 	// Add CORS for browsers
 	params.Mux.Use(params.Middleware.CORS)
 	// Add rate limiting
