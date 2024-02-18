@@ -14,9 +14,10 @@ import (
 )
 
 type Config struct {
-	ServerPort  string
-	DB          DBConfig
-	RedisConfig RedisConfig
+	ServerPort       string
+	DB               DBConfig
+	RedisConfig      RedisConfig
+	MiddlewareConfig MiddlewareConfig
 }
 
 // Mysql DB config
@@ -36,8 +37,21 @@ type RedisConfig struct {
 	Host string
 	Port int
 }
+type MiddlewareConfig struct {
+	MaxRequests int
+	RateWindow  int
+}
 
 func NewConfig() (*Config, error) {
+	// Retrieve params for rate limiting
+	maxrequests, err := strconv.Atoi(os.Getenv("RATE_LIMITER_MAX_REQUESTS"))
+	if err != nil {
+		return nil, err
+	}
+	ratewindow, err := strconv.Atoi(os.Getenv("RATE_LIMITER_WINDOW"))
+	if err != nil {
+		return nil, err
+	}
 	// Create App Config Object from env
 	redisport, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
 	if err != nil {
@@ -58,6 +72,10 @@ func NewConfig() (*Config, error) {
 		RedisConfig: RedisConfig{
 			Host: os.Getenv("REDIS_HOST"),
 			Port: redisport,
+		},
+		MiddlewareConfig: MiddlewareConfig{
+			MaxRequests: maxrequests,
+			RateWindow:  ratewindow,
 		},
 	}, nil
 }

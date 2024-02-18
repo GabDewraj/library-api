@@ -12,4 +12,6 @@ export SERVER_PORT="8080"
 export SYSTEM_PARTITION="library"
 export REDIS_HOST="localhost"
 export REDIS_PORT="6389"
+export RATE_LIMITER_MAX_REQUESTS=5
+export RATE_LIMITER_WINDOW=1
 go run cmd/main.go server

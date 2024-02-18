@@ -8,7 +8,6 @@ import (
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
 )
 
 type booksRepo struct {
@@ -88,6 +87,7 @@ func (p *booksRepo) updatebook(ctx context.Context, ext sqlx.ExtContext, updated
 	if (updatedBook.DeletedAt != utils.CustomTime{}) {
 		updateBuilder = updateBuilder.Set("deleted_at", updatedBook.DeletedAt.Time)
 	}
+	// Always update the updated at field
 	updateBuilder = updateBuilder.Set("updated_at", utils.CustomTime{Time: time.Now()}.Time)
 	updateBuilder = updateBuilder.Where(squirrel.Eq{"id": updatedBook.ID})
 	// Build the final SQL query and arguments
@@ -95,7 +95,6 @@ func (p *booksRepo) updatebook(ctx context.Context, ext sqlx.ExtContext, updated
 	if err != nil {
 		return err
 	}
-	logrus.Infoln(sql, args)
 	// Execute the query with ExecContext
 	_, err = ext.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -207,8 +206,6 @@ func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 	if err != nil {
 		return nil, -1, err
 	}
-	logrus.Infoln(query, args)
-
 	var bookRows *sqlx.Rows
 	switch ext {
 	case nil:
@@ -227,7 +224,6 @@ func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 	defer bookRows.Close()
 	rowsErr := bookRows.Err()
 	if rowsErr != nil {
-		logrus.Error(rowsErr)
 		return nil, -1, rowsErr
 	}
 	for bookRows.Next() {

@@ -30,7 +30,7 @@ func (s *service) RateLimiter(next http.Handler) http.Handler {
 				return
 			}
 
-			if count >= 5 {
+			if count >= s.MaxRequestsPerWindow {
 				err := errors.New("Client has hit rate limit")
 				http.Error(w, err.Error(), http.StatusTooManyRequests)
 				return
@@ -44,7 +44,8 @@ func (s *service) RateLimiter(next http.Handler) http.Handler {
 			}
 
 		default:
-			if err := s.Cache.StoreInteger(r.Context(), cache.CacheIntegerPayload{Key: clientKey, Value: 1}); err != nil {
+			if err := s.Cache.StoreInteger(r.Context(), cache.CacheIntegerPayload{Key: clientKey, Value: 1,
+				Expiration: s.RateWindow}); err != nil {
 				logrus.Error(err)
 				http.Error(w, "Could not store user request ip in cache", http.StatusInternalServerError)
 				return
