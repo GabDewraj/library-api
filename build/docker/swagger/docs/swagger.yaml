@@ -239,6 +239,8 @@ paths:
           schema:
             type: string
       summary: delete a book by ID
+      tags:
+      - Books
     get:
       consumes:
       - application/json

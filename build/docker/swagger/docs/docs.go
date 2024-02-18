@@ -259,6 +259,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Books"
+                ],
                 "summary": "delete a book by ID",
                 "parameters": [
                     {

@@ -294,6 +294,7 @@ func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
 
 // @Summary delete a book by ID
 // @Description delete a book by ID (Hard delete)
+// @Tags Books
 // @Accept json
 // @Produce json
 // @Param book_id path int true "Book ID" Format(int64)
