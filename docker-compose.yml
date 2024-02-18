@@ -1,7 +1,6 @@
 version: "3"
 
 services:
-  # Golang.
   
   db:
     image: mysql:latest
@@ -29,7 +28,7 @@ services:
       - 3000:8080
     networks:
       - private-network
-      
+
   server:
     build:
       context: .

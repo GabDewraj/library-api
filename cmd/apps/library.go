@@ -9,7 +9,7 @@ import (
 	"github.com/GabDewraj/library-api/pkgs/api/middleware"
 	"github.com/GabDewraj/library-api/pkgs/api/routers"
 	"github.com/GabDewraj/library-api/pkgs/domain/books"
-	"github.com/GabDewraj/library-api/pkgs/infrastructure/cache"
+	"github.com/GabDewraj/library-api/pkgs/infrastructure/cache/redcache"
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/repo"
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
@@ -39,7 +39,7 @@ func BooksApp(p BooksAppParams) {
 			p.Redis,
 		),
 		fx.Provide(
-			cache.NewRedisCache,
+			redcache.NewRedisCache,
 			repo.NewlibraryDB,
 			books.NewService,
 			middleware.NewMiddlwareStack,

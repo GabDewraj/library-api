@@ -1,4 +1,4 @@
-package cache
+package redcache
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/GabDewraj/library-api/pkgs/domain/books"
+	"github.com/GabDewraj/library-api/pkgs/infrastructure/cache"
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
 	"github.com/redis/go-redis/v9"
 
@@ -61,11 +62,11 @@ func TestStoreValue(t *testing.T) {
 	// Create a payload
 	testService := NewRedisCache(testClient)
 	// Create a slice of cache payloads
-	data := []*CachePayload{}
+	data := []*cache.CachePayload{}
 	for _, book := range newBooks {
 		jsonData, err := json.Marshal(book)
 		assertWithTest.Nil(err, "Data has been serialized")
-		asset := &CachePayload{
+		asset := &cache.CachePayload{
 			Key:        book.Author,
 			Value:      jsonData,
 			Expiration: 1 * time.Minute,
@@ -91,11 +92,11 @@ func TestRetrieveValue(t *testing.T) {
 	// Create a payload
 	testService := NewRedisCache(testClient)
 	// Create a slice of cache payloads
-	data := []*CachePayload{}
+	data := []*cache.CachePayload{}
 	for _, book := range newBooks {
 		jsonData, err := json.Marshal(book)
 		assertWithTest.Nil(err, "Data has been serialized")
-		asset := &CachePayload{
+		asset := &cache.CachePayload{
 			Key:        book.Author,
 			Value:      jsonData,
 			Expiration: 1 * time.Minute,
@@ -120,12 +121,12 @@ func TestClearCacheByKeys(t *testing.T) {
 	// Create a payload
 	testService := NewRedisCache(testClient)
 	// Create a slice of cache payloads
-	data := []*CachePayload{}
+	data := []*cache.CachePayload{}
 	keys := []string{}
 	for _, book := range newBooks {
 		jsonData, err := json.Marshal(book)
 		assertWithTest.Nil(err, "Data has been serialized")
-		asset := &CachePayload{
+		asset := &cache.CachePayload{
 			Key:        book.Author,
 			Value:      jsonData,
 			Expiration: 1 * time.Minute,
