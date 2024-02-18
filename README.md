@@ -6,6 +6,7 @@ Welcome to the Library API, a Golang-based API server for managing a library.
 
 The Library API is designed with a clean and modular architecture, following a 3-layered structure for better maintainability and scalability.
 
+
 - **Application Layer:** Orchestrates HTTP requests without containing domain logic.
 - **Domain Layer:** Encompasses all domain logic, independent of infrastructure.
 - **Infrastructure Layer:** Handles generic functionality, including caching.
