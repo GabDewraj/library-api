@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/GabDewraj/library-api/cmd/apps"
@@ -60,6 +61,8 @@ func main() {
 			Short: "Run the library server",
 			Long:  ``,
 			Run: func(cmd *cobra.Command, args []string) {
+				// Add mutex for shut down goroutines to avoid race conditions on shutdown
+				mu := sync.Mutex{}
 				// Create a context to handle binary startup
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
@@ -69,8 +72,8 @@ func main() {
 				app := fx.New(
 					// Provide global server items to all applications
 					fx.Provide(
-						func() (context.Context, chan os.Signal) {
-							return ctx, shutdownSignal
+						func() (context.Context, chan os.Signal, *sync.Mutex) {
+							return ctx, shutdownSignal, &mu
 						},
 						logrus.StandardLogger,
 						config.NewConfig,
@@ -90,7 +93,8 @@ func main() {
 				)
 
 				// Pass child context to allow for shutdown
-				go func(ctx context.Context) {
+				go func(ctx context.Context, mu *sync.Mutex) {
+					mu.Lock()
 					// Wait for the shutdown signal
 					<-shutdownSignal
 					logger := logrus.StandardLogger()
@@ -101,8 +105,10 @@ func main() {
 						logger.Error("Error stopping the server:", err)
 						os.Exit(1)
 					}
+					mu.Unlock() // Avoid dead lock before the shutdown
 					os.Exit(0)
-				}(ctx)
+
+				}(ctx, &mu)
 
 				// Start the server
 				if err := app.Start(ctx); err != nil {
