@@ -100,7 +100,7 @@ func NewDBConnection(config *Config) (*sqlx.DB, error) {
 		dbConfig.ForceTLS)
 	// If running in docker compose allow for db to initialise
 	var db *sqlx.DB
-	for retries := 0; retries < 30; retries++ {
+	for retries := 0; retries < 100; retries++ {
 		successConn, err := sqlx.Connect("mysql", dbAddress)
 		if err == nil {
 			// Connection successful, break out of the loop

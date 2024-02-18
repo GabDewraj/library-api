@@ -30,7 +30,8 @@ The API server can be accessed at http://localhost:8080.
 
 # Important Notes
 Allow a few moments for the server to establish a connection to the MySQL database when running Docker Compose.
-The database initialization may take a couple of minutes.
+The database initialization may take a couple of minutes. This takes about 4 to 6 connection attempts after it starts up, 
+view the logs to see the attempts and verify that connection has been established.
 
 # Architecture
 The architecture promotes a modular and maintainable codebase.
