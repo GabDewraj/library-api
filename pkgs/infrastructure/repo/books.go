@@ -25,7 +25,7 @@ func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) 
 	if err != nil {
 		return err
 	}
-	defer concludeTx(tx, &err)
+	defer concludeTx(tx, err)
 	if err := repo.insertBooks(ctx, tx, newBooks); err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (repo *booksRepo) UpdateBook(ctx context.Context, arg *books.Book) error {
 	if err != nil {
 		return err
 	}
-	defer concludeTx(tx, &err)
+	defer concludeTx(tx, err)
 	if err := repo.updatebook(ctx, tx, arg); err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (repo *booksRepo) DeleteBookByID(ctx context.Context, id int) error {
 	if err != nil {
 		return err
 	}
-	defer concludeTx(tx, &err)
+	defer concludeTx(tx, err)
 	if err := repo.deleteBookByID(ctx, tx, id); err != nil {
 		return err
 	}

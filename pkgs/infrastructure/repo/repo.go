@@ -34,7 +34,7 @@ func cleanTestTB(db *sqlx.DB) error {
 	return nil
 }
 
-func concludeTx(tx *sqlx.Tx, err *error) error {
+func concludeTx(tx *sqlx.Tx, err error) error {
 	// If there's an unhandled panic, rollback the transaction
 	if r := recover(); r != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
@@ -44,7 +44,7 @@ func concludeTx(tx *sqlx.Tx, err *error) error {
 		return fmt.Errorf("panic occurred: %v", r)
 	} else {
 		// Commit the transaction if there was no error
-		if *err == nil {
+		if err == nil {
 			if commitErr := tx.Commit(); commitErr != nil {
 				return commitErr
 			}

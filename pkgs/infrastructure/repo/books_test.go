@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/GabDewraj/library-api/pkgs/domain/books"
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,6 +26,28 @@ func TestConn(t *testing.T) {
 	testingBooksDB()
 	_, err := testConn()
 	assertWithTest.Nil(err)
+}
+
+func TestConcludeTx(t *testing.T) {
+	assertWithTest := assert.New(t)
+	// db, err := testConn()
+	db, mock, err := sqlmock.New()
+	mock.ExpectBegin()
+	tx, err := db.Begin()
+	assertWithTest.Nil(err)
+	newTx := sqlx.Tx{
+		Tx: tx,
+	}
+	defer db.Close()
+	assertWithTest.Nil(err)
+	// mock.ExpectRollback()
+	mock.ExpectCommit()
+
+	// mock.ExpectRollback()
+	// dummyErr := errors.New("dcwdcw")
+	// dummyErr = nil
+	conErr := concludeTx(&newTx, nil)
+	assertWithTest.Nil(conErr)
 }
 
 func TestCreateNewBook(t *testing.T) {
