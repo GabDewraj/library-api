@@ -51,8 +51,6 @@ func BooksApp(p BooksAppParams) {
 		fx.Invoke(routers.NewBooksRouter),
 	)
 
-	// Each fx child has its own dependency cycle with its own context
-	// We simply need to shut down the whole server if an application cannot startup and log the error
 	logrus.Infoln("Books application is running...")
 	if err := app.Start(p.CTX); err != nil {
 		logrus.Errorf("Books application is shutting down with ERR: %v", err)
