@@ -28,15 +28,7 @@ type booksHandler struct {
 	cacheService cache.Service
 }
 
-type BooksHandler interface {
-	CreateBook(res http.ResponseWriter, req *http.Request)
-	UpdateBook(res http.ResponseWriter, req *http.Request)
-	GetBooks(res http.ResponseWriter, req *http.Request)
-	GetBookByID(res http.ResponseWriter, req *http.Request)
-	DeleteBook(res http.ResponseWriter, req *http.Request)
-}
-
-func NewBooksHandler(p BooksHandlerParams) BooksHandler {
+func NewBooksHandler(p BooksHandlerParams) books.Handler {
 	return &booksHandler{
 		bookService:  p.BookService,
 		cacheService: p.CacheService,
