@@ -59,7 +59,6 @@ func (repo *booksRepo) DeleteBookByID(ctx context.Context, id int) error {
 	return nil
 }
 
-// GetBooks implements books.Repository.
 func (b *booksRepo) GetBooks(ctx context.Context, params *books.GetBooksParams) ([]*books.Book, int, error) {
 	// Enter nil for sqlx.ExtContext as this query does not form part of a transaction chain
 	return b.getBooks(ctx, nil, params)
