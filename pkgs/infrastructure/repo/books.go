@@ -14,8 +14,6 @@ type booksRepo struct {
 	dbClient *sqlx.DB
 }
 
-// InsertBooks implements books.Repository.
-
 func NewBooksDB(db *sqlx.DB) books.Repository {
 	return &booksRepo{
 		dbClient: db,
@@ -123,7 +121,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 		"genre", "language", "pages", "availability", "updated_at", "created_at",
 	)
 
-	// Add values for each user
+	// Add values for each book
 	for _, book := range books {
 		book.CreatedAt = utils.CustomTime{
 			Time: time.Now(),
@@ -160,10 +158,6 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 	return nil
 }
 
-// Get requests can be included in a transaction or independent of one
-// Allow flexibility to include in a transaction or not
-// Return map to allow for linear allocation of child objects to parents
-// Return slice of project ids to allow for project scop child selection
 func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 	params *books.GetBooksParams) ([]*books.Book, int, error) {
 	var userBooks []*books.Book
@@ -209,9 +203,7 @@ func (repo *booksRepo) getBooks(ctx context.Context, ext sqlx.ExtContext,
 		offset := (params.Page - 1) * params.PerPage
 		sb = sb.Offset(uint64(offset))
 	}
-	// We always limit number of results retrieved
-	// Default can be set in domain or handler
-	// If we choose a specific page of results
+
 	if params.PerPage > 0 {
 		sb = sb.Limit(uint64(params.PerPage))
 	}
