@@ -7,6 +7,7 @@ package repo
 import (
 	"fmt"
 
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
@@ -56,4 +57,16 @@ func concludeTx(tx *sqlx.Tx, err error) error {
 		}
 	}
 	return nil
+}
+
+func handleMysqlErr(err error) error {
+	if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+		switch mysqlErr.Number {
+		case 1062:
+			return fmt.Errorf("entity already exists")
+		default:
+			return fmt.Errorf("Unexpected MySQL error: %v", err)
+		}
+	}
+	return err
 }

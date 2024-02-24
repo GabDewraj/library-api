@@ -49,7 +49,8 @@ func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 	var newBook books.Book
 	if err := json.NewDecoder(req.Body).Decode(&newBook); err != nil {
 		logrus.Error(err)
-		http.Error(res, "failed to unmarshall request body for create book", http.StatusInternalServerError)
+		// Status codes were incorrect for unmarshal
+		http.Error(res, "failed to unmarshall request body for create book", http.StatusBadRequest)
 		return
 	}
 	// Validate the Request
@@ -60,7 +61,7 @@ func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 	// Serve domain data to context domain service function
 	if err := h.bookService.CreateBooks(req.Context(), []*books.Book{&newBook}); err != nil {
 		logrus.Error(err)
-		http.Error(res, "failed to create book", http.StatusInternalServerError)
+		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	payload, err := json.Marshal(newBook)
@@ -91,7 +92,7 @@ func (h *booksHandler) GetBookByID(res http.ResponseWriter, req *http.Request) {
 	bookID, err := strconv.Atoi(idParam)
 	if err != nil {
 		logrus.Error(err)
-		http.Error(res, "could not convert book_id to integer", http.StatusInternalServerError)
+		http.Error(res, "could not convert book_id to integer", http.StatusBadRequest)
 		return
 	}
 	retrievedBook, _, err := h.bookService.GetBooks(req.Context(), &books.GetBooksParams{ID: bookID})
@@ -141,7 +142,7 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
 			logrus.Error(err)
-			http.Error(res, "failed to convert page string parameter to integer", http.StatusInternalServerError)
+			http.Error(res, "failed to convert page string parameter to integer", http.StatusBadRequest)
 			return
 		}
 		params.Page = page
@@ -150,7 +151,7 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 		perPage, err := strconv.Atoi(perPageStr)
 		if err != nil {
 			logrus.Error(err)
-			http.Error(res, "failed to convert per_page string parameter to integer", http.StatusInternalServerError)
+			http.Error(res, "failed to convert per_page string parameter to integer", http.StatusBadRequest)
 			return
 		}
 		params.PerPage = perPage

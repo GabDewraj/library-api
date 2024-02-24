@@ -141,7 +141,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 	// Execute the query with ExecContext
 	result, err := ext.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return err
+		return handleMysqlErr(err)
 	}
 	// Retrieve last insert ID
 	lastInsertID, err := result.LastInsertId()
