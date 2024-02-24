@@ -64,7 +64,6 @@ func main() {
 					),
 					fx.Invoke(config.PerformMigrations))
 				if err := app.Start(ctx); err != nil {
-					cancel()
 					logrus.StandardLogger().Fatal("Error running migrations", err)
 				}
 			},
@@ -130,7 +129,6 @@ func main() {
 
 				// Start the server
 				if err := app.Start(ctx); err != nil {
-					cancel()
 					logrus.StandardLogger().Fatal("Error starting the server:", err)
 				}
 			},
