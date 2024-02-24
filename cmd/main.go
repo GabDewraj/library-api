@@ -39,7 +39,7 @@ func main() {
 			Short: "Creates a testDB within github actions",
 			Long:  ``,
 			Run: func(cmd *cobra.Command, args []string) {
-				// Create a context to handle binary startup
+				// Create a context to handle startup
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
 				// Create test only config for safety, without reliance on infrastructure
