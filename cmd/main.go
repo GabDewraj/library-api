@@ -55,17 +55,14 @@ func main() {
 						ForceTLS:               false,
 					},
 				}
+				// Create migration app
 				app := fx.New(
-					// Supply the test config
 					fx.Supply(testConfig),
-					// Provide global server items to all applications
 					fx.Provide(
 						logrus.StandardLogger,
 						config.NewDBConnection,
 					),
-					// Run necessary migrations
 					fx.Invoke(config.PerformMigrations))
-				// Start the server
 				if err := app.Start(ctx); err != nil {
 					cancel()
 					logrus.StandardLogger().Fatal("Error running migrations", err)
