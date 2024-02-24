@@ -116,24 +116,19 @@ func NewDBConnection(config *Config) (*sqlx.DB, error) {
 	}
 
 	logger.Infoln("Successfully Connected to Database Host")
-	// If connection successful perform new db migrations on app startup
-	if err := performMigrations(db, logger, dbConfig.MigrationDirectoryPath); err != nil {
-		return nil, err
-	}
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(2)
 	db.SetConnMaxLifetime(5 * time.Minute)
 	return db, nil
 }
 
-func performMigrations(db *sqlx.DB, logger *logrus.Logger, migrationPath string) error {
+func PerformMigrations(db *sqlx.DB, logger *logrus.Logger, args *Config) error {
 	logger.Infoln("Performing migrations")
 	n, err := migrate.Exec(db.DB, "mysql", &migrate.FileMigrationSource{
-		Dir: migrationPath,
+		Dir: args.DB.MigrationDirectoryPath,
 	}, migrate.Up)
 	logger.Infof("Performed %d migrations", n)
 	return err
-
 }
 
 // Create a Redis client for Cache service

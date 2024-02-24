@@ -81,6 +81,8 @@ func main() {
 						config.NewDBConnection,
 						config.NewRedisClient,
 					),
+					// Run necessary migrations
+					fx.Invoke(config.PerformMigrations),
 					// Initialize all separate server applications
 					fx.Invoke(apps.BooksApp),
 					// Run the router
