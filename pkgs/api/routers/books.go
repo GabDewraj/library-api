@@ -14,18 +14,22 @@ type LibraryRouterParams struct {
 	Handler    books.Handler
 }
 
-func NewBooksRouter(params LibraryRouterParams) error {
-	// Logging
-	params.Mux.Use(params.Middleware.CustomLogger)
-	// Add CORS for browsers
-	params.Mux.Use(params.Middleware.CORS)
-	// Add rate limiting
-	params.Mux.Use(params.Middleware.RateLimiter)
-	// Routes
-	params.Mux.Post("/books", params.Handler.CreateBook)
-	params.Mux.Get("/books", params.Handler.GetBooks)
-	params.Mux.Get("/books/{book_id}", params.Handler.GetBookByID)
-	params.Mux.Put("/books/{book_id}", params.Handler.UpdateBook)
-	params.Mux.Delete("/books/{book_id}", params.Handler.DeleteBook)
-	return nil
+func NewBooksRouter(params LibraryRouterParams) {
+	// Create a fresh middleware stack so that other domains
+
+	params.Mux.Route("/books", func(r chi.Router) {
+		// Logging
+		r.Use(params.Middleware.CustomLogger)
+		// Add CORS for browsers
+		r.Use(params.Middleware.CORS)
+		// Add rate limiting
+		r.Use(params.Middleware.RateLimiter)
+		// Routes
+		r.Post("/", params.Handler.CreateBook)
+		r.Get("/", params.Handler.GetBooks)
+		r.Get("/{book_id}", params.Handler.GetBookByID)
+		r.Put("/{book_id}", params.Handler.UpdateBook)
+		r.Delete("/{book_id}", params.Handler.DeleteBook)
+	})
+
 }
