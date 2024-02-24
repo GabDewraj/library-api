@@ -39,7 +39,11 @@ func main() {
 			Short: "Creates a testDB within github actions",
 			Long:  ``,
 			Run: func(cmd *cobra.Command, args []string) {
-				config.NewDBConnection(&config.Config{
+				// Create a context to handle binary startup
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				// Create test only config for safety, without reliance on infrastructure
+				testConfig := &config.Config{
 					DB: config.DBConfig{
 						Driver:                 "mysql",
 						Host:                   "localhost",
@@ -47,10 +51,25 @@ func main() {
 						Database:               "library_dev",
 						Password:               "password",
 						Username:               "root",
-						MigrationDirectoryPath: "./cmd/server/config/migrations",
+						MigrationDirectoryPath: "./cmd/config/migrations",
 						ForceTLS:               false,
 					},
-				})
+				}
+				app := fx.New(
+					// Supply the test config
+					fx.Supply(testConfig),
+					// Provide global server items to all applications
+					fx.Provide(
+						logrus.StandardLogger,
+						config.NewDBConnection,
+					),
+					// Run necessary migrations
+					fx.Invoke(config.PerformMigrations))
+				// Start the server
+				if err := app.Start(ctx); err != nil {
+					cancel()
+					logrus.StandardLogger().Fatal("Error running migrations", err)
+				}
 			},
 		})
 
