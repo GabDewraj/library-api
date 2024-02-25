@@ -78,7 +78,7 @@ func readRequestBody(r *http.Request) map[string]interface{} {
 	if err != nil {
 		logrus.Warn("Error reading request body: ", err)
 	}
-	// Refill the emptied request body
+	// Refill the emptied request body, reset the read position
 	r.Body = io.NopCloser(bytes.NewBuffer(requestBody))
 	// Check if the body is non-empty before attempting to unmarshal
 	bodyFields := map[string]interface{}{}
