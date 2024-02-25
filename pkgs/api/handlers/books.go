@@ -26,12 +26,18 @@ type BooksHandlerParams struct {
 type booksHandler struct {
 	bookService  books.Service
 	cacheService cache.Service
+	logger       logrus.FieldLogger
 }
 
 func NewBooksHandler(p BooksHandlerParams) books.Handler {
+
 	return &booksHandler{
 		bookService:  p.BookService,
 		cacheService: p.CacheService,
+		logger: logrus.WithFields(logrus.Fields{
+			"package": "handlers",
+			"domain":  "books",
+		}),
 	}
 }
 
@@ -48,7 +54,7 @@ func NewBooksHandler(p BooksHandlerParams) books.Handler {
 func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 	var newBook books.Book
 	if err := json.NewDecoder(req.Body).Decode(&newBook); err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		// Status codes were incorrect for unmarshal
 		http.Error(res, "failed to unmarshall request body for create book", http.StatusBadRequest)
 		return
@@ -60,18 +66,24 @@ func (h *booksHandler) CreateBook(res http.ResponseWriter, req *http.Request) {
 	}
 	// Serve domain data to context domain service function
 	if err := h.bookService.CreateBooks(req.Context(), []*books.Book{&newBook}); err != nil {
-		logrus.Error(err)
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+		h.logger.Error(err)
+		switch err {
+		case books.ErrBookAlreadyExists:
+			http.Error(res, err.Error(), http.StatusBadRequest)
+		default:
+			http.Error(res, "failed to create book", http.StatusInternalServerError)
+		}
+
 		return
 	}
 	payload, err := json.Marshal(newBook)
 	if err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to marshal response data", http.StatusInternalServerError)
 		return
 	}
 	if _, err := res.Write(payload); err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to write response", http.StatusInternalServerError)
 		return
 	}
@@ -91,24 +103,24 @@ func (h *booksHandler) GetBookByID(res http.ResponseWriter, req *http.Request) {
 	// Scope the input to a urlParam
 	bookID, err := strconv.Atoi(idParam)
 	if err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "could not convert book_id to integer", http.StatusBadRequest)
 		return
 	}
 	retrievedBook, _, err := h.bookService.GetBooks(req.Context(), &books.GetBooksParams{ID: bookID})
 	if err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "could not retrieve book", http.StatusInternalServerError)
 		return
 	}
 	payload, err := json.Marshal(retrievedBook)
 	if err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "could not marshall book data to json", http.StatusInternalServerError)
 		return
 	}
 	if _, err := res.Write(payload); err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to write response", http.StatusInternalServerError)
 		return
 	}
@@ -141,7 +153,7 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 	if pageStr := query.Get("page"); pageStr != "" {
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
-			logrus.Error(err)
+			h.logger.Error(err)
 			http.Error(res, "failed to convert page string parameter to integer", http.StatusBadRequest)
 			return
 		}
@@ -150,7 +162,7 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 	if perPageStr := query.Get("per_page"); perPageStr != "" {
 		perPage, err := strconv.Atoi(perPageStr)
 		if err != nil {
-			logrus.Error(err)
+			h.logger.Error(err)
 			http.Error(res, "failed to convert per_page string parameter to integer", http.StatusBadRequest)
 			return
 		}
@@ -159,7 +171,7 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 	if updatedAtStr := query.Get("updated_at"); updatedAtStr != "" {
 		convertedUpdatedAt, err := strconv.Atoi(updatedAtStr)
 		if err != nil {
-			logrus.Error(err)
+			h.logger.Error(err)
 			http.Error(res, "failed to convert updated_at string parameter to integer", http.StatusInternalServerError)
 			return
 		}
@@ -170,7 +182,7 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 	if bookPagesStr := query.Get("book_pages"); bookPagesStr != "" {
 		pages, err := strconv.Atoi(bookPagesStr)
 		if err != nil {
-			logrus.Error(err)
+			h.logger.Error(err)
 			http.Error(res, "failed to convert book_pages string parameter to integer", http.StatusInternalServerError)
 			return
 		}
@@ -179,7 +191,7 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 	if publishedStr := query.Get("published"); publishedStr != "" {
 		published, err := strconv.Atoi(publishedStr)
 		if err != nil {
-			logrus.Error(err)
+			h.logger.Error(err)
 			http.Error(res, "failed to convert published string parameter to integer", http.StatusInternalServerError)
 			return
 		}
@@ -209,12 +221,12 @@ func (h *booksHandler) GetBooks(res http.ResponseWriter, req *http.Request) {
 	}
 	payload, err := json.Marshal(response)
 	if err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to marshal response data", http.StatusInternalServerError)
 		return
 	}
 	if _, err := res.Write(payload); err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to write reponse", http.StatusInternalServerError)
 		return
 	}
@@ -236,7 +248,7 @@ func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
 	// Scope the input to a urlParam
 	bookID, err := strconv.Atoi(idParam)
 	if err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to convert book_id to integer for update", http.StatusInternalServerError)
 		return
 	}
@@ -252,7 +264,7 @@ func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
 		Availability books.Availability `json:"availability"`
 	}{}
 	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to unmarshall request body", http.StatusInternalServerError)
 		return
 	}
@@ -273,7 +285,7 @@ func (h *booksHandler) UpdateBook(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if err = h.bookService.UpdateBook(req.Context(), &updatedBook); err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to update book", http.StatusInternalServerError)
 		return
 	}
@@ -299,14 +311,14 @@ func (h *booksHandler) DeleteBook(res http.ResponseWriter, req *http.Request) {
 	// Scope the input to a urlParam
 	bookID, err := strconv.Atoi(idParam)
 	if err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to convert book_id to integer for update", http.StatusInternalServerError)
 		return
 	}
 
 	// Function is extensible to soft delete by updating the book deleted_at field
 	if err = h.bookService.DeleteBookByID(req.Context(), bookID); err != nil {
-		logrus.Error(err)
+		h.logger.Error(err)
 		http.Error(res, "failed to delete book", http.StatusInternalServerError)
 		return
 	}

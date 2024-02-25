@@ -11,6 +11,11 @@ import (
 
 type Availability string
 
+// Create global errors that are specific to this domain
+var (
+	ErrBookAlreadyExists = errors.New("book already exists")
+)
+
 const (
 	Available    Availability = "available"
 	NotAvailable Availability = "not_available"

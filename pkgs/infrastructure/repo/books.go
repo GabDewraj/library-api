@@ -2,21 +2,30 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/GabDewraj/library-api/pkgs/domain/books"
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
 	"github.com/Masterminds/squirrel"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type booksRepo struct {
 	dbClient *sqlx.DB
+	logger   logrus.FieldLogger
 }
 
 func NewBooksDB(db *sqlx.DB) books.Repository {
+	// Create a db logger for the books repo
+	logger := logrus.WithFields(logrus.Fields{
+		"package": "booksRepo",
+	})
 	return &booksRepo{
 		dbClient: db,
+		logger:   logger,
 	}
 }
 func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
@@ -143,7 +152,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 	// Execute the query with ExecContext
 	result, err := ext.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return handleMysqlErr(err)
+		return p.handleMysqlErr(err)
 	}
 	// Retrieve last insert ID
 	lastInsertID, err := result.LastInsertId()
@@ -248,4 +257,18 @@ func (repo *booksRepo) deleteBookByID(ctx context.Context, ext sqlx.ExtContext, 
 		return err
 	}
 	return nil
+}
+
+func (repo *booksRepo) handleMysqlErr(err error) error {
+	// Lets log the actual err that we arent propagating
+	if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+		switch mysqlErr.Number {
+		case 1062:
+			repo.logger.Error(mysqlErr.Message)
+			return books.ErrBookAlreadyExists
+		default:
+			return fmt.Errorf("Unexpected MySQL error: %v", err)
+		}
+	}
+	return err
 }

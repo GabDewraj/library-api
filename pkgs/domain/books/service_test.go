@@ -48,7 +48,7 @@ func TestCreateBookValidation(t *testing.T) {
 				CreatedAt:    utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
 				DeletedAt:    utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
 			},
-			ExpectedError: errors.New("Language field is required"),
+			ExpectedError: errors.New("language field is required"),
 			Message:       "Correct format for Book",
 		},
 	}
