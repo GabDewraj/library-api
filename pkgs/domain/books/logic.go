@@ -16,10 +16,6 @@ const (
 	NotAvailable Availability = "not_available"
 )
 
-var (
-	ErrInvalidAvailabilityValue = errors.New("invalid value for availablity")
-)
-
 type Book struct {
 	ID           int              `json:"id" db:"id"`
 	ISBN         string           `json:"isbn" db:"isbn" validate:"required"`
@@ -60,19 +56,26 @@ func (b *Book) ValidateCreateBook() error {
 	err := validate.Struct(b)
 
 	if err != nil {
-		return validationErrMessage(err.(validator.ValidationErrors))
+		err, _ := validationErrMessage(err.(validator.ValidationErrors))
+		return err
 	}
 	return nil
 }
 func (b *Book) ValidateUpdateBook() error {
-	if b.Availability != NotAvailable && b.Availability != Available {
-		return ErrInvalidAvailabilityValue
+	validate := validator.New()
+	err := validate.Struct(b)
+	if err != nil {
+		err, tag := validationErrMessage(err.(validator.ValidationErrors))
+		if tag == "eq=available|eq=not_available" {
+			return err
+		}
+		return nil
 	}
 	return nil
 }
 
 // Internal helper funcs for methods
-func validationErrMessage(errs validator.ValidationErrors) error {
+func validationErrMessage(errs validator.ValidationErrors) (error, string) {
 	for _, err := range errs {
 		var errMessage string
 		switch err.Tag() {
@@ -87,7 +90,7 @@ func validationErrMessage(errs validator.ValidationErrors) error {
 		default:
 			errMessage = fmt.Sprintf("value for %s is not recognized", strings.ToLower(err.Field()))
 		}
-		return errors.New(errMessage)
+		return errors.New(errMessage), err.Tag()
 	}
-	return nil
+	return nil, ""
 }
