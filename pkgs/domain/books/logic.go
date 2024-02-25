@@ -3,6 +3,7 @@ package books
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
 	"github.com/go-playground/validator"
@@ -29,7 +30,7 @@ type Book struct {
 	Genre        string           `json:"genre" db:"genre" validate:"required"`
 	Language     string           `json:"language" db:"language" validate:"required"`
 	Pages        int              `json:"pages" db:"pages" validate:"required"`
-	Availability Availability     `json:"availability" db:"availability" validate:"required"`
+	Availability Availability     `json:"availability" db:"availability" validate:"required,eq=available|eq=not_available"`
 	UpdatedAt    utils.CustomTime `json:"updated_at" db:"updated_at"`
 	CreatedAt    utils.CustomTime `json:"created_at" db:"created_at"`
 	DeletedAt    utils.CustomTime `json:"deleted_at" db:"deleted_at"`
@@ -76,13 +77,15 @@ func validationErrMessage(errs validator.ValidationErrors) error {
 		var errMessage string
 		switch err.Tag() {
 		case "required":
-			errMessage = fmt.Sprintf("%s field is required", err.Field())
+			errMessage = fmt.Sprintf("%s field is required", strings.ToLower(err.Field()))
 		case "min":
-			errMessage = fmt.Sprintf("%s field is too short", err.Field())
+			errMessage = fmt.Sprintf("%s field is too short", strings.ToLower(err.Field()))
 		case "max":
-			errMessage = fmt.Sprintf("%s field is too long", err.Field())
+			errMessage = fmt.Sprintf("%s field is too long", strings.ToLower(err.Field()))
+		case "eq=available|eq=not_available":
+			errMessage = fmt.Sprintf("value for %s is not recognised, please use available or not_available", strings.ToLower(err.Field()))
 		default:
-			errMessage = fmt.Sprintf("%s field has the following error %s", err.Field(), err.Tag())
+			errMessage = fmt.Sprintf("value for %s is not recognized", strings.ToLower(err.Field()))
 		}
 		return errors.New(errMessage)
 	}
