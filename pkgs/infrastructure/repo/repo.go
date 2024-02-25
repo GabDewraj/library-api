@@ -36,26 +36,21 @@ func cleanTestTB(db *sqlx.DB) error {
 }
 
 func concludeTx(tx *sqlx.Tx, err error) error {
-	// If there's an unhandled panic, rollback the transaction
-	if r := recover(); r != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			return rollbackErr
+	// Defer panic handling for the function scope on commit or rollback
+	defer handlePanic()
+
+	// Commit the transaction if there was no error
+	if err == nil {
+		if commitErr := tx.Commit(); commitErr != nil {
+			return fmt.Errorf("commit error: %v", commitErr)
 		}
-		// Return an error
-		return fmt.Errorf("panic occurred: %v", r)
 	} else {
-		// Commit the transaction if there was no error
-		if err == nil {
-			if commitErr := tx.Commit(); commitErr != nil {
-				return commitErr
-			}
-		} else {
-			// Rollback the transaction in case of an error
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				return rollbackErr
-			}
+		// Rollback the transaction in case of an error
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return fmt.Errorf("rollback error: %v", rollbackErr)
 		}
 	}
+
 	return nil
 }
 
@@ -69,4 +64,11 @@ func handleMysqlErr(err error) error {
 		}
 	}
 	return err
+}
+
+func handlePanic() {
+	if r := recover(); r != nil {
+		// Log or handle the panic as needed
+		fmt.Printf("Panic occurred: %v\n", r)
+	}
 }

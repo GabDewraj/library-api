@@ -20,12 +20,14 @@ func NewBooksDB(db *sqlx.DB) books.Repository {
 	}
 }
 func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
+	// Defer panic handling for the function scope on commit or rollback
+	defer handlePanic()
 	// Start transaction
 	tx, err := repo.dbClient.BeginTxx(ctx, nil)
+	defer concludeTx(tx, err)
 	if err != nil {
 		return err
 	}
-	defer concludeTx(tx, err)
 	if err := repo.insertBooks(ctx, tx, newBooks); err != nil {
 		return err
 	}
