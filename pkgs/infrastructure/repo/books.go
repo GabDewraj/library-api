@@ -2,13 +2,11 @@ package repo
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/GabDewraj/library-api/pkgs/domain/books"
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
 	"github.com/Masterminds/squirrel"
-	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 )
@@ -29,15 +27,13 @@ func NewBooksDB(db *sqlx.DB) books.Repository {
 	}
 }
 func (repo *booksRepo) InsertBooks(ctx context.Context, newBooks []*books.Book) error {
-	// Defer panic handling for the function scope on commit or rollback
-	defer handlePanic()
 	// Start transaction
 	tx, err := repo.dbClient.BeginTxx(ctx, nil)
-	defer concludeTx(tx, err)
+	defer concludeTx(tx, &err)
 	if err != nil {
 		return err
 	}
-	if err := repo.insertBooks(ctx, tx, newBooks); err != nil {
+	if err = repo.insertBooks(ctx, tx, newBooks); err != nil {
 		return err
 	}
 	return nil
@@ -50,7 +46,7 @@ func (repo *booksRepo) UpdateBook(ctx context.Context, arg *books.Book) error {
 	if err != nil {
 		return err
 	}
-	defer concludeTx(tx, err)
+	defer concludeTx(tx, &err)
 	if err := repo.updatebook(ctx, tx, arg); err != nil {
 		return err
 	}
@@ -63,7 +59,7 @@ func (repo *booksRepo) DeleteBookByID(ctx context.Context, id int) error {
 	if err != nil {
 		return err
 	}
-	defer concludeTx(tx, err)
+	defer concludeTx(tx, &err)
 	if err := repo.deleteBookByID(ctx, tx, id); err != nil {
 		return err
 	}
@@ -152,7 +148,7 @@ func (p *booksRepo) insertBooks(ctx context.Context, ext sqlx.ExtContext, books 
 	// Execute the query with ExecContext
 	result, err := ext.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return p.handleMysqlErr(err)
+		return err
 	}
 	// Retrieve last insert ID
 	lastInsertID, err := result.LastInsertId()
@@ -259,16 +255,16 @@ func (repo *booksRepo) deleteBookByID(ctx context.Context, ext sqlx.ExtContext, 
 	return nil
 }
 
-func (repo *booksRepo) handleMysqlErr(err error) error {
-	// Lets log the actual err that we arent propagating
-	if mysqlErr, ok := err.(*mysql.MySQLError); ok {
-		switch mysqlErr.Number {
-		case 1062:
-			repo.logger.Error(mysqlErr.Message)
-			return books.ErrBookAlreadyExists
-		default:
-			return fmt.Errorf("Unexpected MySQL error: %v", err)
-		}
-	}
-	return err
-}
+// func (repo *booksRepo) handleMysqlErr(err error) error {
+// 	// Lets log the actual err that we arent propagating
+// 	if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+// 		switch mysqlErr.Number {
+// 		case 1062:
+// 			repo.logger.Error(mysqlErr.Message)
+// 			return books.ErrBookAlreadyExists
+// 		default:
+// 			return fmt.Errorf("Unexpected MySQL error: %v", err)
+// 		}
+// 	}
+// 	return err
+// }

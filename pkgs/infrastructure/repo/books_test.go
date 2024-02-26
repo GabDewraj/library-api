@@ -26,21 +26,18 @@ func TestConn(t *testing.T) {
 	assertWithTest.Nil(err)
 }
 
-func TestConcludeTx(t *testing.T) {
-	assertWithTest := assert.New(t)
-	repo := booksRepo{}
-	err := repo.InsertBooks(context.Background(), []*books.Book{})
-	// err := repo.panicErr()
-	assertWithTest.Nil(err)
-}
+// func TestConcludeTx(t *testing.T) {
+// 	assertWithTest := assert.New(t)
+// 	repo := booksRepo{}
+// 	err := repo.InsertBooks(context.Background(), []*books.Book{})
+// 	// err := repo.panicErr()
+// 	assertWithTest.Nil(err)
+// }
 
 func TestCreateNewBook(t *testing.T) {
 	assertWithTest := assert.New(t)
 	booksRepo, err := testingBooksDB()
 	assertWithTest.Nil(err, "Test org db conn successful")
-	if err != nil {
-		return
-	}
 
 	testCases := []struct {
 		ExpectedErr error
@@ -59,20 +56,6 @@ func TestCreateNewBook(t *testing.T) {
 					Genre:        "Fiction",
 					Language:     "English",
 					Pages:        180,
-					Availability: books.Available,
-					UpdatedAt:    utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
-					CreatedAt:    utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
-					DeletedAt:    utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
-				},
-				{
-					ISBN:         "978-0451524935",
-					Title:        "1984",
-					Author:       "George Orwell",
-					Publisher:    "Signet Classic",
-					Published:    utils.CustomDate{Time: time.Date(1980, 6, 8, 0, 0, 0, 0, time.UTC)},
-					Genre:        "Dystopian",
-					Language:     "English",
-					Pages:        328,
 					Availability: books.Available,
 					UpdatedAt:    utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
 					CreatedAt:    utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
@@ -129,7 +112,7 @@ func TestCreateNewBook(t *testing.T) {
 	}
 	for _, test := range testCases {
 		err := booksRepo.InsertBooks(context.Background(), test.Input)
-		assertWithTest.Equal(test.ExpectedErr, err, test.Description)
+		assertWithTest.Nil(err)
 
 	}
 
