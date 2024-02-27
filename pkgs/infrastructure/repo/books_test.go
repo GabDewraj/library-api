@@ -7,6 +7,7 @@ import (
 
 	"github.com/GabDewraj/library-api/pkgs/domain/books"
 	"github.com/GabDewraj/library-api/pkgs/infrastructure/utils"
+	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -109,10 +110,49 @@ func TestCreateNewBook(t *testing.T) {
 			},
 			Description: "Successful insert of books",
 		},
+		{
+			ExpectedErr: &mysql.MySQLError{Number: 0x426, SQLState: [5]uint8{0x32, 0x33, 0x30, 0x30, 0x30}, Message: "Duplicate entry '978-1234567890' for key 'books.isbn'"},
+			Input: []*books.Book{
+				{
+					ISBN:         "978-1234567890",
+					Title:        "The Great Gatsby",
+					Author:       "F. Scott Fitzgerald",
+					Publisher:    "Scribner",
+					Published:    utils.CustomDate{Time: time.Date(1990, 4, 10, 0, 0, 0, 0, time.UTC)},
+					Genre:        "Fiction",
+					Language:     "English",
+					Pages:        180,
+					Availability: books.Available,
+					UpdatedAt:    utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
+					CreatedAt:    utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
+					DeletedAt:    utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
+				},
+				{
+					ISBN:         "978-1234567890",
+					Title:        "The Great Gatsby",
+					Author:       "F. Scott Fitzgerald",
+					Publisher:    "Scribner",
+					Published:    utils.CustomDate{Time: time.Date(1990, 4, 10, 0, 0, 0, 0, time.UTC)},
+					Genre:        "Fiction",
+					Language:     "English",
+					Pages:        180,
+					Availability: books.Available,
+					UpdatedAt:    utils.CustomTime{Time: time.Now().Add(-24 * time.Hour)},
+					CreatedAt:    utils.CustomTime{Time: time.Now().Add(-48 * time.Hour)},
+					DeletedAt:    utils.CustomTime{Time: time.Now().Add(-72 * time.Hour)},
+				},
+			},
+			Description: "Duplicate entry",
+		},
 	}
 	for _, test := range testCases {
 		err := booksRepo.InsertBooks(context.Background(), test.Input)
-		assertWithTest.Nil(err)
+		if test.ExpectedErr == nil {
+			assertWithTest.Nil(err)
+		}
+		if test.ExpectedErr != nil {
+			assertWithTest.Equal(test.ExpectedErr, err)
+		}
 
 	}
 
